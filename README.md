@@ -8,4 +8,4 @@
 ## Mobile App
 ### Requirements:
 - [Flutter](https://docs.flutter.dev/get-started/install)
-- 
+- [Amplify](https://docs.amplify.aws/cli/start/install/)
