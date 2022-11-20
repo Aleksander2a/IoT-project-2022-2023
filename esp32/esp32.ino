@@ -1,5 +1,5 @@
 //#include <AsyncTCP.h>
-//#include <AsyncMqttClient.h>
+#include <MQTTClient.h>
 #include "secrets.h"
 
 extern "C" {
@@ -20,6 +20,8 @@ float h,T;
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
 
 WiFiClient wifiClient;
+WiFiClientSecure net;
+MQTTClient client{256};
 
 void setup() {
   Serial.begin(115200);
@@ -94,10 +96,12 @@ void connectAWS() {
   net.setPrivateKey(PRIV_KEY);
 
   // Connect to the MQTT broker on the AWS endpoint we defined earlier
-  client.setServer(MQTT_HOST, 8883);
+  //client.setServer(MQTT_HOST, 8883);
+  client.begin(AWS_IOT_ENDPOINT, 8883, net);
 
   // Create a message handler
-  client.setCallback(messageHandler);
+  //client.setCallback(messageHandler);
+  client.onMessage(messageHandler);
 
   Serial.println("Connecting to AWS IoT");
 
