@@ -1,8 +1,7 @@
-#include <AsyncTCP.h>
-#include <AsyncMqttClient.h>
-#include <pgmspace.h>
+//#include <AsyncTCP.h>
+//#include <AsyncMqttClient.h>
 #include "secrets.h"
-#define SECRET
+
 extern "C" {
   #include "freertos/FreeRTOS.h"
   #include "freertos/timers.h"
@@ -15,6 +14,7 @@ extern "C" {
 #include <Adafruit_BME280.h>
 
 Adafruit_BME280 bme;
+float h,T;
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
@@ -26,27 +26,20 @@ void setup() {
   connectWiFi();
   connectAWS();
 
-  /* TODO: Connect BME280
-  bme.begin(0x77);
-
-  if (!bme.begin(0x77)) {
-    Serial.println("Could not detect a BME280 sensor, fix wiring connections!");
-    while(1);
+  if(!bme.begin(0x76))
+  {
+    Serial.print("Nie można wykryć sensora!!");
+    delay(10000);
   }
-  */
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  /* TODO: Connect BME280
   h = bme.readHumidity();
-  t = bme.readTemperature();
-  */
-  h = 40; // fake value until BME280 sensor is connected
-  t = 23; // fake value until BME280 sensor is connected
+  T = bme.readTemperature();
 
 
-  if (isnan(h) || isnan(t)) {  // Check if any reads failed and exit early (to try again)
+  if (isnan(h) || isnan(T)) {  // Check if any reads failed and exit early (to try again)
     Serial.println(F("Failed to read from BME sensor!"));
     return;
   }
@@ -54,11 +47,11 @@ void loop() {
   Serial.print(F("Humidity: "));
   Serial.print(h);
   Serial.print(F("%  Temperature: "));
-  Serial.print(t);
+  Serial.print(T);
   Serial.println(F("*C "));
 
-  publishMessage();
-  client.loop();
+  //publishMessage();
+  //client.loop();
   delay(1000);
 }
 
@@ -72,7 +65,7 @@ void messageHandler(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<200> doc;
   deserializeJson(doc, payload);
   const char* message = doc["message"];
-  Serial.printl(message);
+  Serial.println(message);
 }
 
 
@@ -94,6 +87,7 @@ void connectWiFi() {
 
 
 void connectAWS() {
+  /*
   // Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
   net.setCertificate(CLIENT_CERT);
@@ -121,17 +115,18 @@ void connectAWS() {
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
 
   Serial.println("AWS IoT Connected!");
+  */
 }
 
 
 void publishMessage() {
   StaticJsonDocument<200> doc;
   doc["humidity"] = h;
-  doc["temperature"] = t;
+  doc["temperature"] = T;
   char jsonBuffer[512];
   serializeJson(doc, jsonBuffer); // print to client
 
-  client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer)
+  //client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer)
 }
 
 

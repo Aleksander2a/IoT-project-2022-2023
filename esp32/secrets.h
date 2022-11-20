@@ -1,4 +1,4 @@
-#include <pgnspace.h>
+#include <pgmspace.h>
 
 #define SECRET
 
