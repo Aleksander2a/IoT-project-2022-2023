@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
               padding: EdgeInsets.only(left: 0, top: 10, bottom: 10),
               child: Icon(Icons.keyboard_arrow_left, color: Colors.black),
             ),
-            Text('Back',
+            Text('Wróć',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))
           ],
         ),
@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                 end: Alignment.centerRight,
                 colors: [Color(0xff1c98ad), Color(0xff057ace)])),
         child: Text(
-          'Login',
+          'Zaloguj',
           style: TextStyle(fontSize: 20, color: Colors.white),
         ),
       ),
@@ -103,14 +103,14 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'Don\'t have an account ?',
+              'Nie masz jeszcze konta?',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             SizedBox(
               width: 10,
             ),
             Text(
-              'Sign up',
+              'Zarejestruj się',
               style: TextStyle(
                   color: Color(0xff057ace),
                   fontSize: 13,
@@ -126,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
     return RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          text: 'IoT Project',
+          text: 'IoT Projekt',
           style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w700,
@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       children: <Widget>[
         _entryField("Email"),
-        _entryField("Password", isPassword: true),
+        _entryField("Hasło", isPassword: true),
       ],
     );
   }
@@ -167,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 10),
                     alignment: Alignment.centerRight,
-                    child: Text('Forgot Password ?',
+                    child: Text('Nie pamiętasz hasła?',
                         style: TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w500)),
                   ),

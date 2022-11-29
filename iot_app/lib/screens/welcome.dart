@@ -35,7 +35,7 @@ class _WelcomePageState extends State<WelcomePage> {
             ],
             color: Colors.white),
         child: Text(
-          'Login',
+          'Zaloguj się',
           style: TextStyle(fontSize: 20, color: Color(0xff057ace)),
         ),
       ),
@@ -63,7 +63,7 @@ class _WelcomePageState extends State<WelcomePage> {
             ],
             color: Colors.white),
         child: Text(
-          'Sign up',
+          'Zarejestruj się',
           style: TextStyle(fontSize: 20, color: Color(0xff057ace)),
         ),
       ),
@@ -74,7 +74,7 @@ class _WelcomePageState extends State<WelcomePage> {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-          text: 'IoT Project',
+          text: 'IoT Projekt',
           style: GoogleFonts.portLligatSans(
             textStyle: Theme.of(context).textTheme.headline1,
             fontSize: 30,
