@@ -11,3 +11,30 @@ Useful article on connecting ESP32 board: [LINK](https://randomnerdtutorials.com
 ### Requirements:
 - [Flutter](https://docs.flutter.dev/get-started/install)
 - [Amplify](https://docs.amplify.aws/cli/start/install/)
+
+## AWS
+### PubSub topics:
+#### esp32/pub
+The board sends sensor data to this topic. Sample JSON:
+```json
+{
+  "Temperature": 21.73,
+  "Humidity": 52.763672
+}
+```
+
+#### esp32/sub
+The board reads commands that are sent to this topic. Allowed messages:
+To stop sending sensor data to AWS
+```json
+{
+  "Command": "Stop"
+}
+```
+To resume sending sensor data to AWS
+```json
+{
+  "Command": "Resume"
+}
+```
+When the board is first run, it will send data to AWS by default
