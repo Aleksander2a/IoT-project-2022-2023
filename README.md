@@ -24,7 +24,7 @@ The board sends sensor data to this topic. Sample JSON:
 ```
 
 #### esp32/sub
-The board reads commands that are sent to this topic. Allowed messages:
+The board reads commands that are sent to this topic. Allowed messages:  
 To stop sending sensor data to AWS
 ```json
 {
