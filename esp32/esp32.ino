@@ -3,6 +3,7 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <cstring>
 #include <Adafruit_BME280.h>
 extern "C" {
   #include "freertos/FreeRTOS.h"
@@ -106,15 +107,34 @@ sFySluQqniBcLl163oVDu8VwQ+iMjV5CmX1hc9oHVMxKZhmntXYF
 -----END RSA PRIVATE KEY-----
 )EOF";
 
+bool stopPublishing;
+
 void msgReceived(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message received on ");
   Serial.print(topic);
   Serial.print(": ");
+  char message[length];
   for (int i=0; i<length; i++) {
     Serial.print((char)payload[i]);
+    message[i] = (char)payload[i];
   }
   Serial.println();
+
+  // Parse message to JsonObject
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, message);
+  const char* command = doc["Command"];
+  // Execute command in message
+  Serial.print("Command to exetute is: "); Serial.println(command);
+  if (strcmp(command, "Stop")==0) {
+    Serial.println("Stopping the publishing of messages");
+    stopPublishing = true;
+  } else if(strcmp(command, "Resume")==0) {
+    Serial.println("Resuming the publishing of messages");
+    stopPublishing = false;
+  }
 }
+
 PubSubClient pubSubClient(AWS_HOST, 8883, msgReceived, net);
 
 // ===================================================== SETUP BEGIN =====================================================
@@ -124,7 +144,7 @@ void setup() {
   makeAccessPoint();
   if(!bme.begin(0x76))
   {
-    Serial.print("Nie można wykryć sensora!!");
+    Serial.print("Can't detect sensor !!!");
     delay(10000);
   }
 
@@ -132,17 +152,20 @@ void setup() {
   net.setCACert(rootCA);
   net.setCertificate(certificate_pem_crt);
   net.setPrivateKey(private_pem_key);
+  stopPublishing = false;
 }
 // ===================================================== SETUP END =====================================================
 
 // ===================================================== LOOP BEGIN =====================================================
 void loop(){
+  // Connect to WiFi
   connectToWiFiUsingAP();
   if(WiFi.status() != WL_CONNECTED)return;
 
   // AWS
   connectAWS();
   
+  // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
 
@@ -150,17 +173,14 @@ void loop(){
     Serial.println(F("Failed to read from BME sensor!"));
     return;
   }
-  Serial.print(F("Humidity: "));
-  Serial.print(h);
-  Serial.print(F("%  Temperature: "));
-  Serial.print(T);
-  Serial.println(F("*C "));
 
   // AWS publish message
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f}", T, h);
-  boolean rc = pubSubClient.publish(AWS_IOT_PUBLISH_TOPIC, sensorData);
-  Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
+  if(stopPublishing==false) {
+    boolean rc = pubSubClient.publish(AWS_IOT_PUBLISH_TOPIC, sensorData);
+    Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
+  }
   Serial.println(sensorData);
 
   delay(1000);
