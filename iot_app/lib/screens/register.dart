@@ -3,6 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
 import 'login.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
 class SignUpPage extends StatefulWidget {
   SignUpPage({Key? key, this.title}) : super(key: key);
 
@@ -13,6 +24,82 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // loading ui state - initially set to a loading state
+  bool _isLoading = true;
+  String _username = '';
+  String _email = '';
+  String _password = '';
+
+  @override
+  void initState() {
+    // kick off app initialization
+    _initializeApp();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // to be filled in a later step
+  }
+
+  Future<void> _initializeApp() async {
+    // configure Amplify
+    await _configureAmplify();
+
+    // after configuring Amplify, update loading ui state to loaded state
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _configureAmplify() async {
+    try {
+
+      // amplify plugins
+      final _dataStorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
+
+      // add Amplify plugins
+      await Amplify.addPlugins([_dataStorePlugin]);
+
+      // configure Amplify
+      //
+      // note that Amplify cannot be configured more than once!
+      await Amplify.configure(amplifyconfig);
+    } catch (e) {
+
+      // error handling can be improved for sure!
+      // but this will be sufficient for the purposes of this tutorial
+      safePrint('An error occurred while configuring Amplify: $e');
+    }
+  }
+
+  Future<void> _saveUser() async {
+    // get the current text field contents
+    final username = _username;
+    final email = _email;
+    final password = _password;
+    // create a new User from the form values
+    final newUser = Users(
+        username: username,
+        email: email,
+        password: password,
+        UserProfiles: []
+    );
+    try {
+      // to write data to DataStore, you simply pass an instance of a model to
+      // Amplify.DataStore.save()
+      await Amplify.DataStore.save(newUser);
+      // after creating a new User, close the form
+      // Be sure the context at that moment is still valid and mounted
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      safePrint('An error occurred while saving Todo: $e');
+    }
+  }
+
   Widget _backButton() {
     return InkWell(
       onTap: () {
@@ -42,12 +129,23 @@ class _SignUpPageState extends State<SignUpPage> {
         children: <Widget>[
           Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
             height: 10,
           ),
           TextField(
+              onChanged: (value) {
+                setState(() {
+                  if (title == 'Nazwa') {
+                    _username = value;
+                  } else if (title == 'Email') {
+                    _email = value;
+                  } else if (title == 'Hasło') {
+                    _password = value;
+                  }
+                });
+              },
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -61,6 +159,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget _submitButton() {
     return InkWell(
       onTap: () {
+        _saveUser();
         Navigator.push(
             context, MaterialPageRoute(builder: (context) => HomePage()));
       },
