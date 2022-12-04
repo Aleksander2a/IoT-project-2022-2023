@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
 class Account extends StatefulWidget {
-  const Account({Key? key}) : super(key: key);
+  const Account({Key? key, required this.user}) : super(key: key);
+
+  final Users user;
 
   @override
   State<Account> createState() => _AccountState();
 }
 
 class _AccountState extends State<Account> {
+  String _username = '';
+  String _currentPassword = '';
+  String _newPassword = '';
+  String _confirmNewPassword = '';
+
   Widget _entryField(String title, {bool isPassword = false}) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 10),
@@ -17,12 +35,23 @@ class _AccountState extends State<Account> {
         children: <Widget>[
           Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
             height: 10,
           ),
           TextField(
+            onChanged: (value) {
+              if (title == 'Nazwa użytkownika: ' + widget.user.username) {
+                _username = value;
+              } else if (title == 'Obecne hasło') {
+                _currentPassword = value;
+              } else if (title == 'Nowe hasło') {
+                _newPassword = value;
+              } else if (title == 'Potwierdź nowe hasło') {
+                _confirmNewPassword = value;
+              }
+            },
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -33,8 +62,95 @@ class _AccountState extends State<Account> {
     );
   }
 
+  Future<void> _changePassword() async {
+    // get the current text field contents
+    print("Obecne hasło: $_currentPassword");
+    print("Nowe hasło: $_newPassword");
+    print("Potwierdź nowe hasło: $_confirmNewPassword");
+    if (_newPassword == _confirmNewPassword && _currentPassword == widget.user.password) {
+      final newUserChangedPassword = widget.user.copyWith(
+          password: _newPassword
+      );
+      try {
+        // save the new User to the DataStore
+        await Amplify.DataStore.save(newUserChangedPassword);
+        setState(() {});
+      } catch (e) {
+        safePrint('An error occurred while saving a new User: $e');
+        return;
+      }
+      // show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Hasło zostało zmienione'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Hasła nie są takie same'),
+        ),
+      );
+    }
+  }
+
+  Future<bool> _userExists() async {
+    // get the current text field contents
+    try {
+      List<Users> users = await Amplify.DataStore.query(Users.classType);
+      for (Users user in users) {
+        if (user.username == _username && user.id != widget.user.id) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return false;
+    }
+  }
+
+  Future<void> _changeUsername() async {
+    print("Nazwa użytkownika: $_username");
+    // get the current text field contents
+    if (await _userExists()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Użytkownik o takiej nazwie już istnieje'),
+        ),
+      );
+    } else {
+      final newUserChangedUsername = widget.user.copyWith(
+          username: _username
+      );
+      try {
+        // save the new User to the DataStore
+        await Amplify.DataStore.save(newUserChangedUsername);
+        // refresh the UI
+        setState(() {});
+        // show a success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nazwa użytkownika została zmieniona'),
+          ),
+        );
+      } catch (e) {
+        safePrint('An error occurred while saving a new User: $e');
+      }
+    }
+  }
+
   Widget _submitButton(String text) {
     return InkWell(
+      onTap: () {
+        if (text == "Zmień hasło") {
+          _changePassword();
+          // TODO: clear the text fields
+        } else if (text == "Zmień nazwę") {
+          _changeUsername();
+          // TODO: clear the text fields
+        }
+      },
       child: Container(
         width: MediaQuery.of(context).size.width/2,
         padding: EdgeInsets.symmetric(vertical: 15),
@@ -85,7 +201,7 @@ class _AccountState extends State<Account> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       SizedBox(height: 20),
-                      _entryField("Nazwa użytkownika"),
+                      _entryField("Nazwa użytkownika: " + widget.user.username),
                       SizedBox(height: 20),
                       _submitButton("Zmień nazwę"),
                       SizedBox(height: 20),
