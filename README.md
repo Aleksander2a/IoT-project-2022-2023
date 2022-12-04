@@ -18,8 +18,9 @@ Useful article on connecting ESP32 board: [LINK](https://randomnerdtutorials.com
 The board sends sensor data to this topic. Sample JSON:
 ```json
 {
-  "Temperature": 21.73,
-  "Humidity": 52.763672
+  "Temperature": 20.5,
+  "Humidity": 54.472656,
+  "Pressure": 999.39679
 }
 ```
 
