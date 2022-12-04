@@ -3,6 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
 import 'package:iot_app/screens/register.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
 class LoginPage extends StatefulWidget {
   LoginPage({Key? key, this.title}) : super(key: key);
 
@@ -13,6 +24,98 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // loading ui state - initially set to a loading state
+  bool _isLoading = true;
+  String _email = '';
+  String _password = '';
+  List<String> profileNames = [];
+
+  @override
+  void initState() {
+    // kick off app initialization
+    _initializeApp();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // to be filled in a later step
+  }
+
+  Future<void> _initializeApp() async {
+    // configure Amplify
+    await _configureAmplify();
+
+    // after configuring Amplify, update loading ui state to loaded state
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _configureAmplify() async {
+    try {
+
+      // amplify plugins
+      final _dataStorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
+
+      // add Amplify plugins
+      await Amplify.addPlugins([_dataStorePlugin]);
+
+      // configure Amplify
+      //
+      // note that Amplify cannot be configured more than once!
+      await Amplify.configure(amplifyconfig);
+    } catch (e) {
+
+      // error handling can be improved for sure!
+      // but this will be sufficient for the purposes of this tutorial
+      safePrint('An error occurred while configuring Amplify: $e');
+    }
+  }
+
+  Future<void> _getUserProfilesNames(Users user) async {
+    // get the current text field contents
+    try {
+      profileNames = [];
+      List<Profiles>? userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(user.id),
+      );
+      if (userProfiles == null) {
+        profileNames = [];
+        return;
+      } else {
+        for (var profile in userProfiles) {
+          profileNames.add(profile.profile_name);
+        }
+        return;
+      }
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
+  Future<void> _getUser() async {
+    // get the current text field contents
+    try {
+      List<Users> users = await Amplify.DataStore.query(Users.classType);
+      for (Users user in users) {
+        if (user.email == _email && user.password == _password) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage(user: user)),
+          );
+          return;
+        }
+      }
+      print("Wrong email or password");
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+    }
+  }
+
   Widget _backButton() {
     return InkWell(
       onTap: () {
@@ -48,6 +151,15 @@ class _LoginPageState extends State<LoginPage> {
             height: 10,
           ),
           TextField(
+              onChanged: (value) {
+                setState(() {
+                  if (title == 'Email') {
+                    _email = value;
+                  } else if (title == 'Hasło') {
+                    _password = value;
+                  }
+                });
+              },
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -61,8 +173,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _submitButton() {
     return InkWell(
       onTap: () {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => HomePage()));
+        _getUser();
       },
       child: Container(
         width: MediaQuery.of(context).size.width,

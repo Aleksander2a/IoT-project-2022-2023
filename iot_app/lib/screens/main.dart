@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/welcome.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+
 void main() {
   runApp(const MyApp());
 }

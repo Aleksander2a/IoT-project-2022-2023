@@ -4,8 +4,21 @@ import 'package:iot_app/screens/account.dart';
 import 'package:iot_app/screens/measurements.dart';
 import 'package:iot_app/screens/profiles.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({Key? key, required this.user}) : super(key: key);
+
+  final Users user;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -30,8 +43,8 @@ class _HomePageState extends State<HomePage> {
         body: TabBarView(
           children: [
             Measures(),
-            Profiles(),
-            Account(),
+            ProfilesScreen(user: widget.user),
+            Account(user: widget.user),
           ],
         ),
       ),

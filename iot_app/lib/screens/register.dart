@@ -3,6 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
 import 'login.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
 class SignUpPage extends StatefulWidget {
   SignUpPage({Key? key, this.title}) : super(key: key);
 
@@ -13,6 +24,125 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  // loading ui state - initially set to a loading state
+  bool _isLoading = true;
+  String _username = '';
+  String _email = '';
+  String _password = '';
+
+  @override
+  void initState() {
+    // kick off app initialization
+    _initializeApp();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    // to be filled in a later step
+  }
+
+  Future<void> _initializeApp() async {
+    // configure Amplify
+    await _configureAmplify();
+
+    // after configuring Amplify, update loading ui state to loaded state
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _configureAmplify() async {
+    try {
+
+      // amplify plugins
+      final _dataStorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
+
+      // add Amplify plugins
+      await Amplify.addPlugins([_dataStorePlugin]);
+
+      // configure Amplify
+      //
+      // note that Amplify cannot be configured more than once!
+      await Amplify.configure(amplifyconfig);
+    } catch (e) {
+
+      // error handling can be improved for sure!
+      // but this will be sufficient for the purposes of this tutorial
+      safePrint('An error occurred while configuring Amplify: $e');
+    }
+  }
+
+  Future<bool> _userExists() async {
+    // get the current text field contents
+    try {
+      List<Users> users = await Amplify.DataStore.query(Users.classType);
+      for (Users user in users) {
+        if (user.username == _username) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return false;
+    }
+  }
+
+  Future<void> _saveUser() async {
+    // get the current text field contents
+    final username = _username;
+    final email = _email;
+    final password = _password;
+    // create a new User from the form values
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Uzupełnij wszystkie pola'),
+        ),
+      );
+      return;
+    }
+    if (await _userExists()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Użytkownik o podanej nazwie już istnieje'),
+        ),
+      );
+      return;
+    }
+    final newUser = Users(
+        username: username,
+        email: email,
+        password: password,
+        UserProfiles: []
+    );
+    final newUserWithDefaultProfile = newUser.copyWith(
+      UserProfiles: [
+        Profiles(
+          profile_name: 'Default',
+          min_temperature: 17,
+          max_temperature: 25,
+          min_humidity: 40,
+          max_humidity: 60,
+          usersID: newUser.id
+        )
+      ]
+    );
+    try {
+      // save the new User to the DataStore
+      await Amplify.DataStore.save(newUserWithDefaultProfile);
+      // navigate to the home page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile)),
+      );
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
+  }
+
   Widget _backButton() {
     return InkWell(
       onTap: () {
@@ -42,12 +172,23 @@ class _SignUpPageState extends State<SignUpPage> {
         children: <Widget>[
           Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
             height: 10,
           ),
           TextField(
+              onChanged: (value) {
+                setState(() {
+                  if (title == 'Nazwa') {
+                    _username = value;
+                  } else if (title == 'Email') {
+                    _email = value;
+                  } else if (title == 'Hasło') {
+                    _password = value;
+                  }
+                });
+              },
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -61,8 +202,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget _submitButton() {
     return InkWell(
       onTap: () {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => HomePage()));
+        _saveUser();
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
