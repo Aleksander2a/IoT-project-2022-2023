@@ -19,7 +19,7 @@ WiFiClient wifiClient;
 WiFiClientSecure net;
 
 Adafruit_BME280 bme;
-float h,T;
+float h,T,p;
 
 const char* ssidAP     = "ESP32-Access-Point";
 const char* passwordAP = "IOTagh-2022";
@@ -168,15 +168,16 @@ void loop(){
   // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
+  p = bme.readPressure() / 100.0F; // result in hPa
 
-  if (isnan(h) || isnan(T)) {  // Check if any reads failed and exit early (to try again)
+  if (isnan(h) || isnan(T) || isnan(p)) {  // Check if any reads failed and exit early (to try again)
     Serial.println(F("Failed to read from BME sensor!"));
     return;
   }
 
   // AWS publish message
   char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f}", T, h);
+  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
   if(stopPublishing==false) {
     boolean rc = pubSubClient.publish(AWS_IOT_PUBLISH_TOPIC, sensorData);
     Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
