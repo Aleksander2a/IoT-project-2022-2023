@@ -20,6 +20,7 @@ import '../models/Profiles.dart';
 
 import 'package:mqtt_client/mqtt_client.dart' as mqtt;
 import 'dart:async';
+import 'dart:convert';
 
 
 class Measures extends StatefulWidget {
@@ -40,6 +41,9 @@ class _MeasuresState extends State<Measures>
   double pressure = 0;
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
   late StreamSubscription subscription;
+  TextEditingController tempController = TextEditingController();
+  TextEditingController humController = TextEditingController();
+  TextEditingController presController = TextEditingController();
 
   Widget _picker() {
     List<String> testList = [];
@@ -144,9 +148,21 @@ class _MeasuresState extends State<Measures>
     final String message =
     mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
     print('MQTT message: topic is <${event[0].topic}>, payload is <-- $message -->');
-    // setState(() {
-    //   temperature = double.parse(message);
-    // });
+    Map valueMap = json.decode(message);
+    temperature = valueMap['Temperature'].toDouble();
+    humidity = valueMap['Humidity'].toDouble();
+    pressure = valueMap['Pressure'].toDouble();
+    // Round to 1 decimal places
+    temperature = (temperature * 10).round() / 10;
+    humidity = (humidity * 10).round() / 10;
+    pressure = (pressure * 10).round() / 10;
+
+    tempController.text = temperature.toString();
+    humController.text = humidity.toString();
+    presController.text = pressure.toString();
+    print(temperature.toString());
+    print(humidity.toString());
+    print(pressure.toString());
   }
 
   void onConnected() {
@@ -176,29 +192,18 @@ class _MeasuresState extends State<Measures>
             decoration:
                 BoxDecoration(shape: BoxShape.circle, color: Colors.blue[100]),
             child: Center(
-              child: StreamBuilder(
-                stream: client.updates,
-                builder: (context, snapshot) {
-                  print("===" + snapshot.toString());
-                  if(!snapshot.hasData) {
-                    Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),),);
-                    print("=================No data===============");
-                    return Text('0');
-                  } else {
-                    final mqttReceivedMessages = snapshot.data as List<MqttReceivedMessage<MqttMessage?>>?;
-
-                    final recMess = mqttReceivedMessages![0].payload as MqttPublishMessage;
-                    print("===========================================================" + recMess.payload.message.toString());
-                    return Text(
-                      recMess.payload.message.toString(),
-                      style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[900]),
-                    );
-                  }
-                }
-              )
+              child: TextField(
+                controller: title == 'Temperatura'
+                    ? tempController
+                    : title == 'Wilgotność'
+                        ? humController
+                        : presController,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue[900]),
+            ),
               // child: Text("placeholder",
               //     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ),
@@ -226,6 +231,17 @@ class _MeasuresState extends State<Measures>
   Widget _button(String title) {
     return InkWell(
       onTap: () {
+        if (title == 'Zatrzymaj') {
+          // Publish mqtt message to stop
+          final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
+          builder.addString('{"Command": "Stop"}');
+          client.publishMessage('esp32/sub', MqttQos.atMostOnce, builder.payload!);
+        } else {
+          // Publish mqtt message to resume
+          final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
+          builder.addString('{"Command": "Resume"}');
+          client.publishMessage('esp32/sub', MqttQos.atMostOnce, builder.payload!);
+        }
       },
       child: Container(
         width: MediaQuery.of(context).size.width/3,
