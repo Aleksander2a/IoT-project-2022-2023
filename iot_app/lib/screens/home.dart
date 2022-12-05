@@ -18,7 +18,7 @@ import '../models/Profiles.dart';
 class HomePage extends StatefulWidget {
   HomePage({Key? key, required this.user, required this.userProfiles}) : super(key: key);
 
-  final Users user;
+  Users user;
   List<Profiles> userProfiles;
 
   @override
@@ -26,14 +26,50 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  Future<void> _fetchUser() async {
+    // get the current text field contents
+    try {
+      print('Fetching user...');
+      List<Users> usersList = await Amplify.DataStore.query(
+        Users.classType,
+        where: Users.ID.eq(widget.user.id),
+      );
+      widget.user = usersList[0];
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
+  Future<void> _fetchUserProfilesNames() async {
+    // get the current text field contents
+    try {
+      print('Fetching user profiles...');
+      widget.userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(widget.user.id),
+      );
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     return DefaultTabController(
+      // Update user and userProfiles when the tab is changed
       length: 3,
       child: Scaffold(
         appBar: AppBar(
           bottom: TabBar(
+            onTap: (index) {
+              setState(() {
+                _fetchUser();
+                _fetchUserProfilesNames();
+              });
+            },
             tabs: [
               Tab(text: "Pomiary"),
               Tab(text: "Profile"),
@@ -43,7 +79,7 @@ class _HomePageState extends State<HomePage> {
         ),
         body: TabBarView(
           children: [
-            Measures(),
+            Measures(user: widget.user, userProfiles: widget.userProfiles),
             ProfilesScreen(user: widget.user, userProfiles: widget.userProfiles),
             Account(user: widget.user),
           ],

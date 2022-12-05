@@ -89,6 +89,22 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   Future<void> _addProfile() async {
     // get the current text field contents
     try {
+      if (minTemp >= maxTemp || minHum >= maxHum || minPres >= maxPres) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Wartości minimalne nie mogą być większe ani równe maksymalnym'),
+          ),
+        );
+        return;
+      }
+      if (newProfileName == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nazwa profilu nie może być pusta'),
+          ),
+        );
+        return;
+      }
       final newProfile = Profiles(
           profile_name: newProfileName,
           min_temperature: minTemp,

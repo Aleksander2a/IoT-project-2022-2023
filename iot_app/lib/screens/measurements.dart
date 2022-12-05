@@ -1,9 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/src/widgets/automatic_keep_alive.dart';
 
+// Amplify Flutter Packages
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+import 'package:mqtt_client/mqtt_server_client.dart';
+// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+
+// Generated in previous step
+import '../models/ModelProvider.dart';
+import '../amplifyconfiguration.dart';
+import '../models/Users.dart';
+import '../models/Profiles.dart';
+
+import 'package:mqtt_client/mqtt_client.dart';
+
+
 class Measures extends StatefulWidget {
-  const Measures({Key? key}) : super(key: key);
+  Measures({Key? key, required this.user, required this.userProfiles}) : super(key: key);
+
+  Users user;
+  List<Profiles> userProfiles;
 
   @override
   State<Measures> createState() => _MeasuresState();
@@ -11,10 +32,26 @@ class Measures extends StatefulWidget {
 
 class _MeasuresState extends State<Measures>
     with AutomaticKeepAliveClientMixin {
+  String dropdownValue = '';
+  double temperature = 0;
+  double humidity = 0;
+  double pressure = 0;
+  final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
 
   Widget _picker() {
-    const List<String> testList = <String>['One', 'Two', 'Three'];
-    String dropdownValue = testList.first;
+    List<String> testList = [];
+    if (widget.userProfiles != null) {
+      for (Profiles profile in widget.userProfiles) {
+        testList.add(profile.profile_name);
+      }
+    }
+    setState(() {
+      if (dropdownValue == '') {
+        dropdownValue = testList[0];
+      } else {
+        dropdownValue = dropdownValue;
+      }
+    });
 
     return DropdownButton<String>(
       value: dropdownValue,
@@ -50,22 +87,69 @@ class _MeasuresState extends State<Measures>
     );
   }
 
-  Widget _status() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        Text(
-          'Status urządzenia',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
-        SizedBox(
-          width: 150,
-          height: 50,
-          child: Card(child: Center(child: Text("placeholder"))),
-        ),
-      ],
-    );
+  _connect() {
+
   }
+
+  _disconnect() {
+
+  }
+
+  Future<bool> mqttConnect(String uniqueId) async {
+    print("Connecting to MQTT");
+    ByteData rootCA = await rootBundle.load('assets/certs/RootCA.pem');
+    ByteData deviceCert = await rootBundle.load('assets/certs/DeviceCertificate.crt');
+    ByteData privateKey = await rootBundle.load('assets/certs/Private.key');
+
+    SecurityContext context = SecurityContext.defaultContext;
+    context.setClientAuthoritiesBytes(rootCA.buffer.asUint8List());
+    context.useCertificateChainBytes(deviceCert.buffer.asUint8List());
+    context.usePrivateKeyBytes(privateKey.buffer.asUint8List());
+
+    client.securityContext = context;
+    client.logging(on: true);
+    client.keepAlivePeriod = 20;
+    client.port = 8883;
+    client.secure = true;
+    client.onConnected = onConnected;
+    client.onDisconnected = onDisconnected;
+    client.pongCallback = pong;
+
+    final MqttConnectMessage connMess = MqttConnectMessage()
+        .withClientIdentifier(uniqueId)
+        .startClean();
+    client.connectionMessage = connMess;
+
+    await client.connect();
+    if (client != null && client.connectionStatus!.state == MqttConnectionState.connected) {
+      print('MQTT client connected to AWS');
+      return true;
+    } else {
+      return false;
+    }
+
+    const topic = 'esp32/pub';
+    client.subscribe(topic, MqttQos.atMostOnce);
+
+    return true;
+  }
+
+  void onConnected() {
+    print("Connected to MQTT");
+  }
+
+  void onDisconnected() {
+    print("Disconnected from MQTT");
+  }
+
+  void pong() {
+    print("Pong");
+  }
+
+  void setMeassuerments(String uniqueId) async {
+
+  }
+
 
   Widget _measurement(String title) {
     return Column(
@@ -138,16 +222,12 @@ class _MeasuresState extends State<Measures>
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               _button("Zatrzymaj"),
-              SizedBox(height: 20),
-              _button("Wyłącz")
               ]
         ),
           Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _button("Wznów"),
-                SizedBox(height: 20),
-                _button("Włącz")
               ]
           ),
         ],);
@@ -158,6 +238,7 @@ class _MeasuresState extends State<Measures>
 
   @override
   Widget build(BuildContext context) {
+    mqttConnect("uniqueID");
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
         body: Container(
@@ -171,8 +252,6 @@ class _MeasuresState extends State<Measures>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  SizedBox(height: 50),
-                  _status(),
                   SizedBox(height: 50),
                   _profilePicker(),
                   SizedBox(height: 50),
