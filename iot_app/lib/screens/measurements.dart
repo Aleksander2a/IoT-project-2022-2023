@@ -8,6 +8,7 @@ import 'package:flutter/src/widgets/automatic_keep_alive.dart';
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 // import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
@@ -17,7 +18,8 @@ import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
 
-import 'package:mqtt_client/mqtt_client.dart';
+import 'package:mqtt_client/mqtt_client.dart' as mqtt;
+import 'dart:async';
 
 
 class Measures extends StatefulWidget {
@@ -37,6 +39,7 @@ class _MeasuresState extends State<Measures>
   double humidity = 0;
   double pressure = 0;
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
+  late StreamSubscription subscription;
 
   Widget _picker() {
     List<String> testList = [];
@@ -107,7 +110,7 @@ class _MeasuresState extends State<Measures>
     context.usePrivateKeyBytes(privateKey.buffer.asUint8List());
 
     client.securityContext = context;
-    client.logging(on: true);
+    client.logging(on: false);
     client.keepAlivePeriod = 20;
     client.port = 8883;
     client.secure = true;
@@ -123,15 +126,27 @@ class _MeasuresState extends State<Measures>
     await client.connect();
     if (client != null && client.connectionStatus!.state == MqttConnectionState.connected) {
       print('MQTT client connected to AWS');
-      return true;
     } else {
       return false;
     }
+
+    subscription = client.updates?.listen(_onMessage) as StreamSubscription;
 
     const topic = 'esp32/pub';
     client.subscribe(topic, MqttQos.atMostOnce);
 
     return true;
+  }
+
+  void _onMessage(List<mqtt.MqttReceivedMessage> event) {
+    final mqtt.MqttPublishMessage recMess =
+    event[0].payload as mqtt.MqttPublishMessage;
+    final String message =
+    mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+    print('MQTT message: topic is <${event[0].topic}>, payload is <-- $message -->');
+    // setState(() {
+    //   temperature = double.parse(message);
+    // });
   }
 
   void onConnected() {
@@ -161,8 +176,31 @@ class _MeasuresState extends State<Measures>
             decoration:
                 BoxDecoration(shape: BoxShape.circle, color: Colors.blue[100]),
             child: Center(
-              child: Text("placeholder",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              child: StreamBuilder(
+                stream: client.updates,
+                builder: (context, snapshot) {
+                  print("===" + snapshot.toString());
+                  if(!snapshot.hasData) {
+                    Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),),);
+                    print("=================No data===============");
+                    return Text('0');
+                  } else {
+                    final mqttReceivedMessages = snapshot.data as List<MqttReceivedMessage<MqttMessage?>>?;
+
+                    final recMess = mqttReceivedMessages![0].payload as MqttPublishMessage;
+                    print("===========================================================" + recMess.payload.message.toString());
+                    return Text(
+                      recMess.payload.message.toString(),
+                      style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue[900]),
+                    );
+                  }
+                }
+              )
+              // child: Text("placeholder",
+              //     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ),
           ),
           Text(
