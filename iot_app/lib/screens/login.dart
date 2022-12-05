@@ -103,9 +103,13 @@ class _LoginPageState extends State<LoginPage> {
       List<Users> users = await Amplify.DataStore.query(Users.classType);
       for (Users user in users) {
         if (user.email == _email && user.password == _password) {
+          List<Profiles> userProfiles = await Amplify.DataStore.query(
+            Profiles.classType,
+            where: Profiles.USERSID.eq(user.id),
+          );
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HomePage(user: user)),
+            MaterialPageRoute(builder: (context) => HomePage(user: user, userProfiles: userProfiles)),
           );
           return;
         }

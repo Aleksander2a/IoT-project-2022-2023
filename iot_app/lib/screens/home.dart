@@ -16,9 +16,10 @@ import '../models/Users.dart';
 import '../models/Profiles.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.user}) : super(key: key);
+  HomePage({Key? key, required this.user, required this.userProfiles}) : super(key: key);
 
   final Users user;
+  List<Profiles> userProfiles;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         body: TabBarView(
           children: [
             Measures(),
-            ProfilesScreen(user: widget.user),
+            ProfilesScreen(user: widget.user, userProfiles: widget.userProfiles),
             Account(user: widget.user),
           ],
         ),

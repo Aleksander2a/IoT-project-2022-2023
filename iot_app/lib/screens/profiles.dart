@@ -13,16 +13,16 @@ import '../models/Users.dart';
 import '../models/Profiles.dart';
 
 class ProfilesScreen extends StatefulWidget {
-  const ProfilesScreen({Key? key, required this.user}) : super(key: key);
+  ProfilesScreen({Key? key, required this.user, required this.userProfiles}) : super(key: key);
 
-  final Users user;
+  Users user;
+  List<Profiles> userProfiles;
 
   @override
   State<ProfilesScreen> createState() => _ProfilesScreenState();
 }
 
 class _ProfilesScreenState extends State<ProfilesScreen> {
-  String profileNameToDelete = '';
   String newProfileName = '';
   double minTemp = 0;
   double maxTemp = 0;
@@ -37,27 +37,16 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   TextEditingController minPressController = TextEditingController();
   TextEditingController maxPressController = TextEditingController();
   TextEditingController newProfileNameController = TextEditingController();
-  List<String> profileNames = [];
+  String dropdownValue = '';
 
 
-  Future<void> _getUserProfilesNames() async {
+  Future<void> _fetchUserProfilesNames() async {
     // get the current text field contents
     try {
-      profileNames = [];
-      List<Profiles>? userProfiles = await Amplify.DataStore.query(
+      widget.userProfiles = await Amplify.DataStore.query(
         Profiles.classType,
         where: Profiles.USERSID.eq(widget.user.id),
       );
-      if (userProfiles == null) {
-        profileNames = [];
-        return;
-      } else {
-        for (var profile in userProfiles) {
-          print("Prfile: " + profile.profile_name);
-          profileNames.add(profile.profile_name);
-        }
-        return;
-      }
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
       return;
@@ -66,12 +55,18 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
 
   Widget _picker() {
     List<String> testList = [];
-    if (widget.user.UserProfiles != null) {
-      for (var profile in widget.user.UserProfiles!) {
+    if (widget.userProfiles != null) {
+      for (Profiles profile in widget.userProfiles) {
         testList.add(profile.profile_name);
       }
     }
-    String dropdownValue = testList.first;
+    setState(() {
+      if (dropdownValue == '') {
+        dropdownValue = testList[0];
+      } else {
+        dropdownValue = dropdownValue;
+      }
+    });
 
     return DropdownButton<String>(
       value: dropdownValue,
@@ -80,7 +75,6 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
       onChanged: (String? value) {
         setState(() {
           dropdownValue = value!;
-          profileNameToDelete = value!;
         });
       },
       items: testList.map<DropdownMenuItem<String>>((String value) {
@@ -104,16 +98,18 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
           usersID: widget.user.id);
       await Amplify.DataStore.save(newProfile);
       final newUser = widget.user.copyWith(
-          UserProfiles: widget.user.UserProfiles! + [newProfile]);
+          UserProfiles: widget.userProfiles + [newProfile]);
       await Amplify.DataStore.save(newUser);
+      widget.user = newUser;
+      widget.userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(widget.user.id),
+      );;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Dodano profil'),
         ),
       );
-      setState(() {
-        profileNames = [];
-      });
       // refresh the UI
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
@@ -123,7 +119,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
 
   Future<void> _deleteProfile() async {
     // get the current text field contents
-    if (profileNameToDelete == 'Default') {
+    if (dropdownValue == 'Default') {
       // show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -135,18 +131,22 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
     try {
       List<Profiles> profilesToDelete = await Amplify.DataStore.query(
         Profiles.classType,
-        where: Profiles.PROFILE_NAME.eq(profileNameToDelete),
+        where: Profiles.PROFILE_NAME.eq(dropdownValue),
       );
       if (profilesToDelete.isNotEmpty) {
+        print('Deleting profile: ' + profilesToDelete[0].profile_name);
         await Amplify.DataStore.delete(profilesToDelete.first);
+        widget.userProfiles.remove(profilesToDelete.first);
+        print("===========Updated userProfiles: " + widget.userProfiles.toString());
+        final newUser = widget.user.copyWith(
+            UserProfiles: widget.userProfiles);
+        widget.user = newUser;
+        await Amplify.DataStore.save(newUser);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Usunięto profil'),
           ),
         );
-        setState(() {
-          profileNames = [];
-        });
       }
     } catch (e) {
       print("Could not query DataStore: " + e.toString());

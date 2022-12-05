@@ -118,25 +118,25 @@ class _SignUpPageState extends State<SignUpPage> {
         password: password,
         UserProfiles: []
     );
+    final newProfile = Profiles(
+        profile_name: 'Default',
+        min_temperature: 17,
+        max_temperature: 25,
+        min_humidity: 40,
+        max_humidity: 60,
+        usersID: newUser.id
+    );
     final newUserWithDefaultProfile = newUser.copyWith(
-      UserProfiles: [
-        Profiles(
-          profile_name: 'Default',
-          min_temperature: 17,
-          max_temperature: 25,
-          min_humidity: 40,
-          max_humidity: 60,
-          usersID: newUser.id
-        )
-      ]
+      UserProfiles: [newProfile]
     );
     try {
       // save the new User to the DataStore
       await Amplify.DataStore.save(newUserWithDefaultProfile);
+      await Amplify.DataStore.save(newProfile);
       // navigate to the home page
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile)),
+        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile, userProfiles: newUserWithDefaultProfile.UserProfiles!)),
       );
     } catch (e) {
       safePrint('An error occurred while saving a new User: $e');
