@@ -102,6 +102,8 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
           max_temperature: maxTemp,
           min_humidity: minHum,
           max_humidity: maxHum,
+          min_pressure: minPres,
+          max_pressure: maxPres,
           usersID: widget.user.id);
       await Amplify.DataStore.save(newProfile);
       final newUser = widget.user.copyWith(
@@ -270,12 +272,6 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
                     child: Text('Dodaj'),
                     onPressed: () async {
                       _addProfile();
-                      // show a success message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Profil został dodany'),
-                        ),
-                      );
                       Navigator.of(context).pop();
                     },
                   ),
@@ -335,21 +331,9 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
                         setState(() {});
                       } catch (e) {
                         safePrint('An error occurred while changing device ID: $e');
-                        // show a failure message
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Wystąpił błąd. Nie zachowano zmian.'),
-                          ),
-                        );
                         Navigator.of(context).pop();
                         return;
                       }
-                      // show a success message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Aktywny profil został zmieniony'),
-                        ),
-                      );
                       Navigator.of(context).pop();
                     },
                   ),
@@ -358,6 +342,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
             },
           );
         }
+        setState(() {});
         widget.notifyParent();
       },
       child: Container(

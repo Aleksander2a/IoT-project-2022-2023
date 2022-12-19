@@ -22,6 +22,9 @@ import 'package:mqtt_client/mqtt_client.dart' as mqtt;
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:uuid/uuid.dart';
+
+
 
 class Measures extends StatefulWidget {
   Measures({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
@@ -47,6 +50,36 @@ class _MeasuresState extends State<Measures>
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
 
+
+  Color isTempOk() {
+    if (tempController.text == '') {
+      return Colors.green;
+    }
+    if (double.parse(tempController.text) < widget.activeProfile.min_temperature! || double.parse(tempController.text) > widget.activeProfile.max_temperature!) {
+      return Colors.red;
+    }
+    return Colors.green;
+  }
+
+  Color isHumOk() {
+    if (humController.text == '') {
+      return Colors.green;
+    }
+    if (double.parse(humController.text) < widget.activeProfile.min_humidity! || double.parse(humController.text) > widget.activeProfile.max_humidity!) {
+      return Colors.red;
+    }
+    return Colors.green;
+  }
+
+  Color isPresOk() {
+    if (presController.text == '') {
+      return Colors.green;
+    }
+    if (double.parse(presController.text) < widget.activeProfile.min_pressure! || double.parse(presController.text) > widget.activeProfile.max_pressure!) {
+      return Colors.red;
+    }
+    return Colors.green;
+  }
 
   Widget _activeProfileInfo() {
     return Row(
@@ -126,6 +159,7 @@ class _MeasuresState extends State<Measures>
     tempController.text = temperature.toString();
     humController.text = humidity.toString();
     presController.text = pressure.toString();
+    setState(() {});
     print(temperature.toString());
     print(humidity.toString());
     print(pressure.toString());
@@ -155,8 +189,17 @@ class _MeasuresState extends State<Measures>
           Container(
             width: 100,
             height: 100,
-            decoration:
-                BoxDecoration(shape: BoxShape.circle, color: Colors.blue[100]),
+            decoration: title== 'Temperatura'
+                ? BoxDecoration(
+                shape: BoxShape.circle,
+                color: isTempOk())
+                : title == 'Wilgotność'
+                ? BoxDecoration(
+                shape: BoxShape.circle,
+                color: isHumOk())
+                : BoxDecoration(
+                shape: BoxShape.circle,
+                color: isPresOk()),
             child: Center(
               child: TextField(
                 controller: title == 'Temperatura'
@@ -288,7 +331,6 @@ class _MeasuresState extends State<Measures>
 
   @override
   Widget build(BuildContext context) {
-    mqttConnect("uniqueID");
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
         body: Container(
@@ -341,5 +383,11 @@ class _MeasuresState extends State<Measures>
         ],
       ),
     ));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    mqttConnect(Uuid().v4());
   }
 }

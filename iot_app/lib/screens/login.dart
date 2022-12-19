@@ -74,29 +74,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _getUserProfilesNames(Users user) async {
-    // get the current text field contents
-    try {
-      profileNames = [];
-      List<Profiles>? userProfiles = await Amplify.DataStore.query(
-        Profiles.classType,
-        where: Profiles.USERSID.eq(user.id),
-      );
-      if (userProfiles == null) {
-        profileNames = [];
-        return;
-      } else {
-        for (var profile in userProfiles) {
-          profileNames.add(profile.profile_name);
-        }
-        return;
-      }
-    } catch (e) {
-      print("Could not query DataStore: " + e.toString());
-      return;
-    }
-  }
-
   Future<void> _getUser() async {
     // get the current text field contents
     try {
