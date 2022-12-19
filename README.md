@@ -2,7 +2,7 @@
 
 ## ESP32
 ### Requirements:
-- [Arduino IDE](https://www.arduino.cc/en/software) (! WARNING ! - [Nightly build](https://www.arduino.cc/en/software#:~:text=newer%2C%2064%20bits-,Nightly%20Builds,-Download%20a%20preview) may be required in case of some errors with connecting board)
+- [Arduino IDE](https://www.arduino.cc/en/software) (**WARNING** - [Nightly build](https://www.arduino.cc/en/software#:~:text=newer%2C%2064%20bits-,Nightly%20Builds,-Download%20a%20preview) may be required in case of some errors with connecting board)
 - ESP32-WROOM-DA Module
 
 Useful article on connecting ESP32 board: [LINK](https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/)
@@ -18,8 +18,9 @@ Useful article on connecting ESP32 board: [LINK](https://randomnerdtutorials.com
 The board sends sensor data to this topic. Sample JSON:
 ```json
 {
-  "Temperature": 21.73,
-  "Humidity": 52.763672
+  "Temperature": 20.5,
+  "Humidity": 54.472656,
+  "Pressure": 999.39679
 }
 ```
 

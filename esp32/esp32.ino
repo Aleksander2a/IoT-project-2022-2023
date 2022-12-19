@@ -10,8 +10,6 @@ extern "C" {
   #include "freertos/timers.h"
 }
 
-#define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
-#define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
 #define THING_NAME "esp32"
 #define AWS_HOST "a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com"
 
@@ -19,7 +17,7 @@ WiFiClient wifiClient;
 WiFiClientSecure net;
 
 Adafruit_BME280 bme;
-float h,T;
+float h,T,p;
 
 const char* ssidAP     = "ESP32-Access-Point";
 const char* passwordAP = "IOTagh-2022";
@@ -153,6 +151,10 @@ void setup() {
   net.setCertificate(certificate_pem_crt);
   net.setPrivateKey(private_pem_key);
   stopPublishing = false;
+
+  // Display unique code
+  Serial.print("Your ESP Board MAC Address is:  ");
+  Serial.println(WiFi.macAddress());
 }
 // ===================================================== SETUP END =====================================================
 
@@ -168,17 +170,18 @@ void loop(){
   // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
+  p = bme.readPressure() / 100.0F; // result in hPa
 
-  if (isnan(h) || isnan(T)) {  // Check if any reads failed and exit early (to try again)
+  if (isnan(h) || isnan(T) || isnan(p)) {  // Check if any reads failed and exit early (to try again)
     Serial.println(F("Failed to read from BME sensor!"));
     return;
   }
 
   // AWS publish message
   char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f}", T, h);
+  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
   if(stopPublishing==false) {
-    boolean rc = pubSubClient.publish(AWS_IOT_PUBLISH_TOPIC, sensorData);
+    boolean rc = pubSubClient.publish((WiFi.macAddress()+"/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
   }
   Serial.println(sensorData);
@@ -217,6 +220,7 @@ void responseToGET(WiFiClient client){
   client.println("<body>");
   client.println("<h2>Konfiguracja połączenia urządzenia z routerem WiFi</h2>");
   client.println("<p>Podaj dane sieci, do której chcesz podłączyć urządzenie. Po zatwierdzeniu danych, połączenie z "+String(ssidAP)+" urwie się. Jeśli dane będą poprawne, sieć "+String(ssidAP)+" przestanie być widoczna, w innym przypadku należy ponownie połączyć się z "+String(ssidAP)+" i podać dane.</p>");
+  client.println("<p>Unikalny kod twojego urządzenia to <b>"+WiFi.macAddress()+"</b>. Zapamiętaj go, będzie ci potrzebny podczas rejestracji w aplikacji.</p>");
   client.println("<form method=\"post\">");
   client.println("<label for=\"ssid\">SSID:</label><br>");
   client.println("<input type=\"text\" id=\"ssid\" name=\"ssid\" required><br>");
@@ -331,7 +335,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
   }
-  pubSubClient.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
+  pubSubClient.subscribe((WiFi.macAddress()+"/commands").c_str());
   pubSubClient.loop();
 }
 // ===================================================== AWS END =====================================================
