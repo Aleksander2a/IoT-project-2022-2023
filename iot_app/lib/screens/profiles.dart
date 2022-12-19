@@ -165,6 +165,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
         final newUser = widget.user.copyWith(
             UserProfiles: widget.userProfiles);
         widget.user = newUser;
+        profileToDelete = '';
         await Amplify.DataStore.save(newUser);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
