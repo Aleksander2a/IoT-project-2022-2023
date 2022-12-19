@@ -13,9 +13,12 @@ import '../models/Users.dart';
 import '../models/Profiles.dart';
 
 class Account extends StatefulWidget {
-  const Account({Key? key, required this.user}) : super(key: key);
+  Account({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
 
+  final Function() notifyParent;
   final Users user;
+  List<Profiles> userProfiles;
+  Profiles activeProfile;
 
   @override
   State<Account> createState() => _AccountState();
@@ -25,11 +28,11 @@ class _AccountState extends State<Account> {
   String _username = '';
   String _currentPassword = '';
   String _newPassword = '';
-  String _confirmNewPassword = '';
+  String _deviceId = '';
 
   Widget _entryField(String title, {bool isPassword = false}) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: EdgeInsets.symmetric(vertical: 5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -48,8 +51,8 @@ class _AccountState extends State<Account> {
                 _currentPassword = value;
               } else if (title == 'Nowe hasło') {
                 _newPassword = value;
-              } else if (title == 'Potwierdź nowe hasło') {
-                _confirmNewPassword = value;
+              } else if (title == 'ID urządzenia: ' + widget.user.device_id) {
+                _deviceId = value;
               }
             },
               obscureText: isPassword,
@@ -66,29 +69,60 @@ class _AccountState extends State<Account> {
     // get the current text field contents
     print("Obecne hasło: $_currentPassword");
     print("Nowe hasło: $_newPassword");
-    print("Potwierdź nowe hasło: $_confirmNewPassword");
-    if (_newPassword == _confirmNewPassword && _currentPassword == widget.user.password) {
+    if (_currentPassword == widget.user.password) {
       final newUserChangedPassword = widget.user.copyWith(
           password: _newPassword
       );
-      try {
-        // save the new User to the DataStore
-        await Amplify.DataStore.save(newUserChangedPassword);
-        setState(() {});
-      } catch (e) {
-        safePrint('An error occurred while saving a new User: $e');
-        return;
-      }
-      // show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Hasło zostało zmienione'),
-        ),
+
+      // display AlertDialog to confirm the change
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Potwierdź zmianę hasła'),
+            content: Text('Czy na pewno chcesz zmienić hasło na $_newPassword?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Anuluj'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Zmień'),
+                onPressed: () async {
+                  try {
+                    // save the new User to the DataStore
+                    await Amplify.DataStore.save(newUserChangedPassword);
+                    setState(() {});
+                  } catch (e) {
+                    safePrint('An error occurred while updating User: $e');
+                    // show a failure message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Wystąpił błąd. Nie zachowano zmian.'),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                    return;
+                  }
+                  // show a success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Hasło została zmieniona'),
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hasła nie są takie same'),
+          content: Text('Obecne hasło jest niepoprawne'),
         ),
       );
     }
@@ -123,21 +157,106 @@ class _AccountState extends State<Account> {
       final newUserChangedUsername = widget.user.copyWith(
           username: _username
       );
-      try {
-        // save the new User to the DataStore
-        await Amplify.DataStore.save(newUserChangedUsername);
-        // refresh the UI
-        setState(() {});
-        // show a success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Nazwa użytkownika została zmieniona'),
-          ),
-        );
-      } catch (e) {
-        safePrint('An error occurred while saving a new User: $e');
-      }
+      // display AlertDialog to confirm the change
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Potwierdź zmianę nazwy użytkownika'),
+            content: Text('Czy na pewno chcesz zmienić nazwę użytkownika na $_username?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Anuluj'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Zmień'),
+                onPressed: () async {
+                  try {
+                    // save the new User to the DataStore
+                    await Amplify.DataStore.save(newUserChangedUsername);
+                    setState(() {});
+                  } catch (e) {
+                    safePrint('An error occurred while updating User: $e');
+                    // show a failure message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Wystąpił błąd. Nie zachowano zmian.'),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                    return;
+                  }
+                  // show a success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Nazwa użytkownika została zmieniona'),
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
+  }
+
+  Future<void> _changeDeviceId() async {
+    print("ID urządzenia: $_deviceId");
+    // get the current text field contents
+    final newUserChangedDeviceId = widget.user.copyWith(
+        device_id: _deviceId
+    );
+    // display AlertDialog to confirm the change
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Potwierdź zmianę ID urządzenia'),
+          content: Text('Czy na pewno chcesz zmienić ID urządzenia na $_deviceId?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Anuluj'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Zmień'),
+              onPressed: () async {
+                try {
+                  // save the new User to the DataStore
+                  await Amplify.DataStore.save(newUserChangedDeviceId);
+                  // refresh the UI
+                  setState(() {});
+                } catch (e) {
+                  safePrint('An error occurred while changing device ID: $e');
+                  // show a failure message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Wystąpił błąd. Nie zachowano zmian.'),
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                  return;
+                }
+                // show a success message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('ID urządzenia zostało zmienione'),
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _submitButton(String text) {
@@ -149,11 +268,15 @@ class _AccountState extends State<Account> {
         } else if (text == "Zmień nazwę") {
           _changeUsername();
           // TODO: clear the text fields
+        } else if (text == "Zmień ID urządzenia") {
+          // TODO: clear the text fields
+          _changeDeviceId();
         }
+        widget.notifyParent();
       },
       child: Container(
         width: MediaQuery.of(context).size.width/2,
-        padding: EdgeInsets.symmetric(vertical: 15),
+        padding: EdgeInsets.symmetric(vertical: 5),
         alignment: Alignment.center,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(5)),
@@ -169,7 +292,7 @@ class _AccountState extends State<Account> {
                 end: Alignment.centerRight,
                 colors: [Color(0xff1c98ad), Color(0xff057ace)])),
         child: Text(text,
-          style: TextStyle(fontSize: 20, color: Colors.white),
+          style: TextStyle(fontSize: 15, color: Colors.white),
         ),
       ),
     );
@@ -179,8 +302,7 @@ class _AccountState extends State<Account> {
     return Column(
       children: <Widget>[
         _entryField("Obecne hasło", isPassword: true),
-        _entryField("Nowe hasło", isPassword: true),
-        _entryField("Potwierdź nowe hasło", isPassword: true),
+        _entryField("Nowe hasło", isPassword: true)
       ],
     );
   }
@@ -200,14 +322,18 @@ class _AccountState extends State<Account> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
                       _entryField("Nazwa użytkownika: " + widget.user.username),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
                       _submitButton("Zmień nazwę"),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
                       _newPasswordWidget(),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
                       _submitButton("Zmień hasło"),
+                      SizedBox(height: 15),
+                      _entryField("ID urządzenia: " + widget.user.device_id),
+                      SizedBox(height: 15),
+                      _submitButton("Zmień ID urządzenia"),
                     ],
                   ),
                 ),

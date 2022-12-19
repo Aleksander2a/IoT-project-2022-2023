@@ -16,31 +16,68 @@ import '../models/Users.dart';
 import '../models/Profiles.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key? key, required this.user, required this.userProfiles}) : super(key: key);
+  HomePage({Key? key, required this.user, required this.userProfiles, required this.activeProfile}) : super(key: key);
 
   Users user;
   List<Profiles> userProfiles;
+  Profiles activeProfile;
+  String state = 'off';
+
+  refresh() async {
+    state = 'on';
+    print(" ====== " + state);
+    _fetchUser();
+    _fetchProfiles();
+    _fetchActiveProfile();
+    _fetchActiveProfile();
+  }
 
   @override
   State<HomePage> createState() => _HomePageState();
-}
 
-class _HomePageState extends State<HomePage> {
   Future<void> _fetchUser() async {
-    // get the current text field contents
     try {
       print('Fetching user...');
       List<Users> usersList = await Amplify.DataStore.query(
         Users.classType,
-        where: Users.ID.eq(widget.user.id),
+        where: Users.ID.eq(user.id),
       );
-      widget.user = usersList[0];
+      user = usersList[0];
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
       return;
     }
   }
 
+  Future<void> _fetchProfiles() async {
+    try {
+      print('Fetching profiles...');
+      userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(user.id),
+      );
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
+  Future<void> _fetchActiveProfile() async {
+    try {
+      print('Fetching active profile...');
+      List<Profiles> activeProfileList = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(user.id).and(Profiles.ID.eq(user.active_profile_id)),
+      );
+      activeProfile = activeProfileList[0];
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+}
+
+class _HomePageState extends State<HomePage> {
   Future<void> _fetchUserProfilesNames() async {
     // get the current text field contents
     try {
@@ -66,8 +103,7 @@ class _HomePageState extends State<HomePage> {
           bottom: TabBar(
             onTap: (index) {
               setState(() {
-                _fetchUser();
-                _fetchUserProfilesNames();
+                widget.refresh();
               });
             },
             tabs: [
@@ -79,9 +115,9 @@ class _HomePageState extends State<HomePage> {
         ),
         body: TabBarView(
           children: [
-            Measures(user: widget.user, userProfiles: widget.userProfiles),
-            ProfilesScreen(user: widget.user, userProfiles: widget.userProfiles),
-            Account(user: widget.user),
+            Measures(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile, notifyParent: widget.refresh),
+            ProfilesScreen(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile, notifyParent: widget.refresh),
+            Account(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile, notifyParent: widget.refresh),
           ],
         ),
       ),

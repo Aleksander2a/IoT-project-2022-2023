@@ -27,7 +27,7 @@ class _SignUpPageState extends State<SignUpPage> {
   // loading ui state - initially set to a loading state
   bool _isLoading = true;
   String _username = '';
-  String _email = '';
+  String _deviceId = '';
   String _password = '';
 
   @override
@@ -93,10 +93,10 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _saveUser() async {
     // get the current text field contents
     final username = _username;
-    final email = _email;
+    final deviceId = _deviceId;
     final password = _password;
     // create a new User from the form values
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || deviceId.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Uzupełnij wszystkie pola'),
@@ -112,9 +112,19 @@ class _SignUpPageState extends State<SignUpPage> {
       );
       return;
     }
+    // check if deviceId matches pattern for mac address
+    final deviceRegexp = RegExp(r'^[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}$');
+    if (!deviceRegexp.hasMatch(deviceId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Niepoprawny format identyfikatora urządzenia'),
+        ),
+      );
+      return;
+    }
     final newUser = Users(
         username: username,
-        email: email,
+        device_id: deviceId,
         password: password,
         UserProfiles: []
     );
@@ -123,10 +133,13 @@ class _SignUpPageState extends State<SignUpPage> {
         min_temperature: 17,
         max_temperature: 25,
         min_humidity: 40,
-        max_humidity: 60,
+        max_humidity: 45,
+        min_pressure: 1000,
+        max_pressure: 1020,
         usersID: newUser.id
     );
     final newUserWithDefaultProfile = newUser.copyWith(
+      active_profile_id: newProfile.id,
       UserProfiles: [newProfile]
     );
     try {
@@ -136,7 +149,7 @@ class _SignUpPageState extends State<SignUpPage> {
       // navigate to the home page
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile, userProfiles: newUserWithDefaultProfile.UserProfiles!)),
+        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile, userProfiles: newUserWithDefaultProfile.UserProfiles!, activeProfile: newProfile)),
       );
     } catch (e) {
       safePrint('An error occurred while saving a new User: $e');
@@ -182,8 +195,8 @@ class _SignUpPageState extends State<SignUpPage> {
                 setState(() {
                   if (title == 'Nazwa') {
                     _username = value;
-                  } else if (title == 'Email') {
-                    _email = value;
+                  } else if (title == 'ID Urządzenia') {
+                    _deviceId = value;
                   } else if (title == 'Hasło') {
                     _password = value;
                   }
@@ -278,7 +291,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return Column(
       children: <Widget>[
         _entryField("Nazwa"),
-        _entryField("Email"),
+        _entryField("ID Urządzenia"),
         _entryField("Hasło", isPassword: true),
       ],
     );

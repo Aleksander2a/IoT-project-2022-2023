@@ -24,10 +24,12 @@ import 'dart:convert';
 
 
 class Measures extends StatefulWidget {
-  Measures({Key? key, required this.user, required this.userProfiles}) : super(key: key);
+  Measures({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
 
+  final Function() notifyParent;
   Users user;
   List<Profiles> userProfiles;
+  Profiles activeProfile;
 
   @override
   State<Measures> createState() => _MeasuresState();
@@ -45,51 +47,15 @@ class _MeasuresState extends State<Measures>
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
 
-  Widget _picker() {
-    List<String> testList = [];
-    if (widget.userProfiles != null) {
-      for (Profiles profile in widget.userProfiles) {
-        testList.add(profile.profile_name);
-      }
-    }
-    setState(() {
-      if (dropdownValue == '') {
-        dropdownValue = testList[0];
-      } else {
-        dropdownValue = dropdownValue;
-      }
-    });
 
-    return DropdownButton<String>(
-      value: dropdownValue,
-      style: const TextStyle(
-          fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xff057ace)),
-      onChanged: (String? value) {
-        setState(() {
-          dropdownValue = value!;
-        });
-      },
-      items: testList.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(value),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _profilePicker() {
+  Widget _activeProfileInfo() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: <Widget>[
         Text(
-          'Aktywny profil',
+          'Aktywny profil: ' + widget.activeProfile.profile_name,
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-        ),
-        SizedBox(
-          width: 10,
-        ),
-        _picker(),
+        )
       ],
     );
   }
@@ -136,7 +102,7 @@ class _MeasuresState extends State<Measures>
 
     subscription = client.updates?.listen(_onMessage) as StreamSubscription;
 
-    const topic = 'esp32/pub';
+    String topic = '${widget.user.device_id}/sensorData';
     client.subscribe(topic, MqttQos.atMostOnce);
 
     return true;
@@ -235,12 +201,12 @@ class _MeasuresState extends State<Measures>
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('esp32/sub', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('esp32/sub', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(
@@ -290,6 +256,36 @@ class _MeasuresState extends State<Measures>
   @override
   bool get wantKeepAlive => true;
 
+  Widget _entryColumn(String title, String fieldFor1, String fieldFor2, String fieldFor3) {
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(title,
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 25),
+              child: Text(title=='MIN' ? widget.activeProfile.min_temperature.toString() : widget.activeProfile.max_temperature.toString(),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            )
+          ]),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 25),
+              child: Text(title=='MIN' ? widget.activeProfile.min_humidity.toString() : widget.activeProfile.max_humidity.toString(),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            )
+          ]),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 25),
+              child: Text(title=='MIN' ? widget.activeProfile.min_pressure.toString() : widget.activeProfile.max_pressure.toString(),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            )
+          ]),
+        ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     mqttConnect("uniqueID");
@@ -307,7 +303,33 @@ class _MeasuresState extends State<Measures>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   SizedBox(height: 50),
-                  _profilePicker(),
+                  _activeProfileInfo(),
+                  SizedBox(height: 20),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              SizedBox(height: 20),
+                              Text(
+                                "Temperatura",
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              SizedBox(height: 50),
+                              Text(
+                                "Wilgotność",
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              SizedBox(height: 50),
+                              Text(
+                                "Ciśnienie",
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ]),
+                        _entryColumn("MIN", "minTemp", "minHum", "minPres"),
+                        _entryColumn("MAX", "maxTemp", "maxHum", "maxPres"),
+                      ]),
                   SizedBox(height: 50),
                   _data(),
                   SizedBox(height: 50),
