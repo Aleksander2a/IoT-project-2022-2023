@@ -31,8 +31,9 @@ class Users extends Model {
   static const classType = const _UsersModelType();
   final String id;
   final String? _username;
-  final String? _email;
   final String? _password;
+  final String? _active_profile_id;
+  final String? _device_id;
   final List<Profiles>? _UserProfiles;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
@@ -63,9 +64,9 @@ class Users extends Model {
     }
   }
   
-  String get email {
+  String get password {
     try {
-      return _email!;
+      return _password!;
     } catch(e) {
       throw new AmplifyCodeGenModelException(
           AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -76,9 +77,13 @@ class Users extends Model {
     }
   }
   
-  String get password {
+  String? get active_profile_id {
+    return _active_profile_id;
+  }
+  
+  String get device_id {
     try {
-      return _password!;
+      return _device_id!;
     } catch(e) {
       throw new AmplifyCodeGenModelException(
           AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -101,14 +106,15 @@ class Users extends Model {
     return _updatedAt;
   }
   
-  const Users._internal({required this.id, required username, required email, required password, UserProfiles, createdAt, updatedAt}): _username = username, _email = email, _password = password, _UserProfiles = UserProfiles, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Users._internal({required this.id, required username, required password, active_profile_id, required device_id, UserProfiles, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _device_id = device_id, _UserProfiles = UserProfiles, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory Users({String? id, required String username, required String email, required String password, List<Profiles>? UserProfiles}) {
+  factory Users({String? id, required String username, required String password, String? active_profile_id, required String device_id, List<Profiles>? UserProfiles}) {
     return Users._internal(
       id: id == null ? UUID.getUUID() : id,
       username: username,
-      email: email,
       password: password,
+      active_profile_id: active_profile_id,
+      device_id: device_id,
       UserProfiles: UserProfiles != null ? List<Profiles>.unmodifiable(UserProfiles) : UserProfiles);
   }
   
@@ -122,8 +128,9 @@ class Users extends Model {
     return other is Users &&
       id == other.id &&
       _username == other._username &&
-      _email == other._email &&
       _password == other._password &&
+      _active_profile_id == other._active_profile_id &&
+      _device_id == other._device_id &&
       DeepCollectionEquality().equals(_UserProfiles, other._UserProfiles);
   }
   
@@ -137,8 +144,9 @@ class Users extends Model {
     buffer.write("Users {");
     buffer.write("id=" + "$id" + ", ");
     buffer.write("username=" + "$_username" + ", ");
-    buffer.write("email=" + "$_email" + ", ");
     buffer.write("password=" + "$_password" + ", ");
+    buffer.write("active_profile_id=" + "$_active_profile_id" + ", ");
+    buffer.write("device_id=" + "$_device_id" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
@@ -146,20 +154,22 @@ class Users extends Model {
     return buffer.toString();
   }
   
-  Users copyWith({String? username, String? email, String? password, List<Profiles>? UserProfiles}) {
+  Users copyWith({String? username, String? password, String? active_profile_id, String? device_id, List<Profiles>? UserProfiles}) {
     return Users._internal(
       id: id,
       username: username ?? this.username,
-      email: email ?? this.email,
       password: password ?? this.password,
+      active_profile_id: active_profile_id ?? this.active_profile_id,
+      device_id: device_id ?? this.device_id,
       UserProfiles: UserProfiles ?? this.UserProfiles);
   }
   
   Users.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
       _username = json['username'],
-      _email = json['email'],
       _password = json['password'],
+      _active_profile_id = json['active_profile_id'],
+      _device_id = json['device_id'],
       _UserProfiles = json['UserProfiles'] is List
         ? (json['UserProfiles'] as List)
           .where((e) => e?['serializedData'] != null)
@@ -170,18 +180,19 @@ class Users extends Model {
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'username': _username, 'email': _email, 'password': _password, 'UserProfiles': _UserProfiles?.map((Profiles? e) => e?.toJson()).toList(), 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'device_id': _device_id, 'UserProfiles': _UserProfiles?.map((Profiles? e) => e?.toJson()).toList(), 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'username': _username, 'email': _email, 'password': _password, 'UserProfiles': _UserProfiles, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'device_id': _device_id, 'UserProfiles': _UserProfiles, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
   static final QueryModelIdentifier<UsersModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<UsersModelIdentifier>();
   static final QueryField ID = QueryField(fieldName: "id");
   static final QueryField USERNAME = QueryField(fieldName: "username");
-  static final QueryField EMAIL = QueryField(fieldName: "email");
   static final QueryField PASSWORD = QueryField(fieldName: "password");
+  static final QueryField ACTIVE_PROFILE_ID = QueryField(fieldName: "active_profile_id");
+  static final QueryField DEVICE_ID = QueryField(fieldName: "device_id");
   static final QueryField USERPROFILES = QueryField(
     fieldName: "UserProfiles",
     fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (Profiles).toString()));
@@ -209,13 +220,19 @@ class Users extends Model {
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.EMAIL,
+      key: Users.PASSWORD,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.PASSWORD,
+      key: Users.ACTIVE_PROFILE_ID,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: Users.DEVICE_ID,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));

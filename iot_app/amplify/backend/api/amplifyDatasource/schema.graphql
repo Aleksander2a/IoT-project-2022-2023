@@ -5,13 +5,16 @@ type Profiles @model @auth(rules: [{allow: public}]) {
   max_temperature: Float
   min_humidity: Float
   max_humidity: Float
+  min_pressure: Float
+  max_pressure: Float
   usersID: ID! @index(name: "byUsers")
 }
 
 type Users @model @auth(rules: [{allow: public}]) {
   id: ID!
   username: String!
-  email: AWSEmail!
   password: String!
+  active_profile_id: ID
+  device_id: String!
   UserProfiles: [Profiles] @hasMany(indexName: "byUsers", fields: ["id"])
 }

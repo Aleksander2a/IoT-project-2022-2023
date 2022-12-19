@@ -11,18 +11,21 @@ import '../models/ModelProvider.dart';
 import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
+import 'home.dart';
 
 class ProfilesScreen extends StatefulWidget {
-  const ProfilesScreen({Key? key, required this.user}) : super(key: key);
+  ProfilesScreen({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
 
-  final Users user;
+  final Function() notifyParent;
+  Users user;
+  List<Profiles> userProfiles;
+  Profiles activeProfile;
 
   @override
   State<ProfilesScreen> createState() => _ProfilesScreenState();
 }
 
 class _ProfilesScreenState extends State<ProfilesScreen> {
-  String profileNameToDelete = '';
   String newProfileName = '';
   double minTemp = 0;
   double maxTemp = 0;
@@ -37,50 +40,32 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   TextEditingController minPressController = TextEditingController();
   TextEditingController maxPressController = TextEditingController();
   TextEditingController newProfileNameController = TextEditingController();
-  List<String> profileNames = [];
+  String profileToDelete = '';
+  String activeSelectedProfile = '';
 
-
-  Future<void> _getUserProfilesNames() async {
-    // get the current text field contents
-    try {
-      profileNames = [];
-      List<Profiles>? userProfiles = await Amplify.DataStore.query(
-        Profiles.classType,
-        where: Profiles.USERSID.eq(widget.user.id),
-      );
-      if (userProfiles == null) {
-        profileNames = [];
-        return;
-      } else {
-        for (var profile in userProfiles) {
-          print("Prfile: " + profile.profile_name);
-          profileNames.add(profile.profile_name);
-        }
-        return;
-      }
-    } catch (e) {
-      print("Could not query DataStore: " + e.toString());
-      return;
-    }
-  }
 
   Widget _picker() {
     List<String> testList = [];
-    if (widget.user.UserProfiles != null) {
-      for (var profile in widget.user.UserProfiles!) {
+    if (widget.userProfiles != null) {
+      for (Profiles profile in widget.userProfiles) {
         testList.add(profile.profile_name);
       }
     }
-    String dropdownValue = testList.first;
+    setState(() {
+      if (profileToDelete == '') {
+        profileToDelete = testList[0];
+      } else {
+        profileToDelete = profileToDelete;
+      }
+    });
 
     return DropdownButton<String>(
-      value: dropdownValue,
+      value: profileToDelete,
       style: const TextStyle(
           fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xff057ace)),
       onChanged: (String? value) {
         setState(() {
-          dropdownValue = value!;
-          profileNameToDelete = value!;
+          profileToDelete = value!;
         });
       },
       items: testList.map<DropdownMenuItem<String>>((String value) {
@@ -95,6 +80,22 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   Future<void> _addProfile() async {
     // get the current text field contents
     try {
+      if (minTemp >= maxTemp || minHum >= maxHum || minPres >= maxPres) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Wartości minimalne nie mogą być większe ani równe maksymalnym'),
+          ),
+        );
+        return;
+      }
+      if (newProfileName == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nazwa profilu nie może być pusta'),
+          ),
+        );
+        return;
+      }
       final newProfile = Profiles(
           profile_name: newProfileName,
           min_temperature: minTemp,
@@ -104,26 +105,34 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
           usersID: widget.user.id);
       await Amplify.DataStore.save(newProfile);
       final newUser = widget.user.copyWith(
-          UserProfiles: widget.user.UserProfiles! + [newProfile]);
+          UserProfiles: widget.userProfiles + [newProfile]);
       await Amplify.DataStore.save(newUser);
+      widget.user = newUser;
+      widget.userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(widget.user.id),
+      );;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Dodano profil'),
         ),
       );
-      setState(() {
-        profileNames = [];
-      });
       // refresh the UI
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
+      // show a failure message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wystąpił błąd. Zmiany zachowano zmian.'),
+        ),
+      );
       return;
     }
   }
 
   Future<void> _deleteProfile() async {
     // get the current text field contents
-    if (profileNameToDelete == 'Default') {
+    if (profileToDelete == 'Default') {
       // show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -132,36 +141,224 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
       );
       return;
     }
+    if (profileToDelete == widget.activeProfile.profile_name) {
+      // show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nie można usunąć aktywnego profilu')
+        ),
+      );
+      return;
+    }
     try {
       List<Profiles> profilesToDelete = await Amplify.DataStore.query(
         Profiles.classType,
-        where: Profiles.PROFILE_NAME.eq(profileNameToDelete),
+        where: Profiles.PROFILE_NAME.eq(profileToDelete),
       );
       if (profilesToDelete.isNotEmpty) {
+        print('Deleting profile: ' + profilesToDelete[0].profile_name);
         await Amplify.DataStore.delete(profilesToDelete.first);
+        widget.userProfiles.remove(profilesToDelete.first);
+        print("===========Updated userProfiles: " + widget.userProfiles.toString());
+        final newUser = widget.user.copyWith(
+            UserProfiles: widget.userProfiles);
+        widget.user = newUser;
+        await Amplify.DataStore.save(newUser);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Usunięto profil'),
           ),
         );
-        setState(() {
-          profileNames = [];
-        });
       }
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
+      // show a failure message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wystąpił błąd. Zmiany zachowano zmian.'),
+        ),
+      );
       return;
     }
+  }
+
+  Future<void> setActiveProfile() async {
+    widget.activeProfile = widget.userProfiles.firstWhere((element) => element.profile_name == activeSelectedProfile);
+    final newUserChangedActiveProfile = widget.user.copyWith(
+        active_profile_id: widget.activeProfile.id
+    );
+    await Amplify.DataStore.save(newUserChangedActiveProfile);
+    // Display scaffold message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Zmieniono aktywny profil na ' + widget.activeProfile.profile_name),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    widget.notifyParent();
+  }
+
+  Widget _activeProfilePicker() {
+    List<String> testList = [];
+    if (widget.userProfiles != null) {
+      for (Profiles profile in widget.userProfiles) {
+        testList.add(profile.profile_name);
+      }
+    }
+    setState(() {
+      if (activeSelectedProfile == '') {
+        activeSelectedProfile = widget.activeProfile.profile_name;
+      } else {
+        activeSelectedProfile = activeSelectedProfile;
+      }
+    });
+
+    return DropdownButton<String>(
+      value: activeSelectedProfile,
+      style: const TextStyle(
+          fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xff057ace)),
+      onChanged: (String? value) {
+        setState(() {
+          activeSelectedProfile = value!;
+          // setActiveProfile();
+        });
+      },
+      items: testList.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _activeProfilePickerSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Text(
+          'Aktywny profil',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(
+          width: 10,
+        ),
+        _activeProfilePicker(),
+      ],
+    );
   }
 
   Widget _button(String title) {
     return InkWell(
       onTap: () {
         if (title == 'Dodaj') {
-          _addProfile();
+          // display AlertDialog to confirm the change
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Potwierdź dodanie profilu'),
+                content: Text('Czy na pewno chcesz dodać profil $newProfileName?'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Anuluj'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: Text('Dodaj'),
+                    onPressed: () async {
+                      _addProfile();
+                      // show a success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Profil został dodany'),
+                        ),
+                      );
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
         } else if (title == 'Usuń') {
-          _deleteProfile();
+          // display AlertDialog to confirm the change
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Potwierdź usunięcie profilu'),
+                content: Text('Czy na pewno chcesz usunąć profil $profileToDelete?'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Anuluj'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: Text('Usuń'),
+                    onPressed: () async {
+                      _deleteProfile();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        } else if(title == 'Aktywuj') {
+          // TODO: implement
+          // display AlertDialog to confirm the change
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Potwierdź zmianę aktywnego profilu'),
+                content: Text('Czy na pewno chcesz zmienić aktywny profil na $activeSelectedProfile?'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Anuluj'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    child: Text('Zmień'),
+                    onPressed: () async {
+                      try {
+                        // save the new User to the DataStore
+                        setActiveProfile();
+                        // refresh the UI
+                        setState(() {});
+                      } catch (e) {
+                        safePrint('An error occurred while changing device ID: $e');
+                        // show a failure message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Wystąpił błąd. Nie zachowano zmian.'),
+                          ),
+                        );
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      // show a success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Aktywny profil został zmieniony'),
+                        ),
+                      );
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
         }
+        widget.notifyParent();
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 3,
@@ -191,7 +388,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   Widget _entryField({String fieldFor='', double width = 75}) {
     return Container(
       width: width,
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: EdgeInsets.symmetric(vertical: 15),
       child: TextField(
           controller: fieldFor == 'minTemp' ? minTempController : fieldFor == 'maxTemp' ? maxTempController : fieldFor == 'minHum' ? minHumController : fieldFor == 'maxHum' ? maxHumController : fieldFor == 'minPres' ? minPressController : fieldFor == 'maxPres' ? maxPressController : newProfileNameController,
           onChanged: (value) {
@@ -219,57 +416,6 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
     );
   }
 
-  Widget _eraseButton({String ereaseField = ''}) {
-    return InkWell(
-      onTap: () {
-        if (ereaseField == 'minTemp') {
-          minTemp = 0;
-          minTempController.clear();
-        } else if (ereaseField == 'maxTemp') {
-          maxTemp = 0;
-          maxTempController.clear();
-        } else if (ereaseField == 'minHum') {
-          minHum = 0;
-          minHumController.clear();
-        } else if (ereaseField == 'maxHum') {
-          maxHum = 0;
-          maxHumController.clear();
-        } else if (ereaseField == 'minPres') {
-          minPres = 0;
-          minPressController.clear();
-        } else if (ereaseField == 'maxPres') {
-          maxPres = 0;
-          maxPressController.clear();
-        } else if (ereaseField == 'profileName') {
-          newProfileName = '';
-          newProfileNameController.clear();
-        }
-      },
-      child: Container(
-        width: 25,
-        height: 25,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                  color: Colors.grey.shade200,
-                  offset: Offset(2, 4),
-                  blurRadius: 5,
-                  spreadRadius: 2)
-            ],
-            gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xff1c98ad), Color(0xff057ace)])),
-        child: Text(
-          "X",
-          style: TextStyle(fontSize: 15, color: Colors.white),
-        ),
-      ),
-    );
-  }
-
   Widget _entryColumn(String title, String fieldFor1, String fieldFor2, String fieldFor3) {
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -277,16 +423,13 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
           Text(title,
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            _entryField(fieldFor: fieldFor1),
-            _eraseButton(),
+            _entryField(fieldFor: fieldFor1)
           ]),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            _entryField(fieldFor: fieldFor2),
-            _eraseButton(),
+            _entryField(fieldFor: fieldFor2)
           ]),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            _entryField(fieldFor: fieldFor3),
-            _eraseButton(),
+            _entryField(fieldFor: fieldFor3)
           ]),
         ]);
   }
@@ -356,10 +499,15 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
                           "Nazwa profilu",
                           style: TextStyle(fontSize: 15),
                         ),
-                        _entryField(fieldFor: "profileName", width: 150),
+                        _entryField(fieldFor: "profileName", width: 100),
+                        _button("Dodaj"),
                       ]),
+                  // SizedBox(height: 20),
+                  // _button("Dodaj"),
                   SizedBox(height: 20),
-                  _button("Dodaj")
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[_activeProfilePickerSelector(), _button("Aktywuj")]),
                 ],
               ),
             ),

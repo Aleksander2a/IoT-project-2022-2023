@@ -33,6 +33,8 @@ class Profiles extends Model {
   final double? _max_temperature;
   final double? _min_humidity;
   final double? _max_humidity;
+  final double? _min_pressure;
+  final double? _max_pressure;
   final String? _usersID;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
@@ -79,6 +81,14 @@ class Profiles extends Model {
     return _max_humidity;
   }
   
+  double? get min_pressure {
+    return _min_pressure;
+  }
+  
+  double? get max_pressure {
+    return _max_pressure;
+  }
+  
   String get usersID {
     try {
       return _usersID!;
@@ -100,9 +110,9 @@ class Profiles extends Model {
     return _updatedAt;
   }
   
-  const Profiles._internal({required this.id, required profile_name, min_temperature, max_temperature, min_humidity, max_humidity, required usersID, createdAt, updatedAt}): _profile_name = profile_name, _min_temperature = min_temperature, _max_temperature = max_temperature, _min_humidity = min_humidity, _max_humidity = max_humidity, _usersID = usersID, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Profiles._internal({required this.id, required profile_name, min_temperature, max_temperature, min_humidity, max_humidity, min_pressure, max_pressure, required usersID, createdAt, updatedAt}): _profile_name = profile_name, _min_temperature = min_temperature, _max_temperature = max_temperature, _min_humidity = min_humidity, _max_humidity = max_humidity, _min_pressure = min_pressure, _max_pressure = max_pressure, _usersID = usersID, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory Profiles({String? id, required String profile_name, double? min_temperature, double? max_temperature, double? min_humidity, double? max_humidity, required String usersID}) {
+  factory Profiles({String? id, required String profile_name, double? min_temperature, double? max_temperature, double? min_humidity, double? max_humidity, double? min_pressure, double? max_pressure, required String usersID}) {
     return Profiles._internal(
       id: id == null ? UUID.getUUID() : id,
       profile_name: profile_name,
@@ -110,6 +120,8 @@ class Profiles extends Model {
       max_temperature: max_temperature,
       min_humidity: min_humidity,
       max_humidity: max_humidity,
+      min_pressure: min_pressure,
+      max_pressure: max_pressure,
       usersID: usersID);
   }
   
@@ -127,6 +139,8 @@ class Profiles extends Model {
       _max_temperature == other._max_temperature &&
       _min_humidity == other._min_humidity &&
       _max_humidity == other._max_humidity &&
+      _min_pressure == other._min_pressure &&
+      _max_pressure == other._max_pressure &&
       _usersID == other._usersID;
   }
   
@@ -144,6 +158,8 @@ class Profiles extends Model {
     buffer.write("max_temperature=" + (_max_temperature != null ? _max_temperature!.toString() : "null") + ", ");
     buffer.write("min_humidity=" + (_min_humidity != null ? _min_humidity!.toString() : "null") + ", ");
     buffer.write("max_humidity=" + (_max_humidity != null ? _max_humidity!.toString() : "null") + ", ");
+    buffer.write("min_pressure=" + (_min_pressure != null ? _min_pressure!.toString() : "null") + ", ");
+    buffer.write("max_pressure=" + (_max_pressure != null ? _max_pressure!.toString() : "null") + ", ");
     buffer.write("usersID=" + "$_usersID" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
@@ -152,7 +168,7 @@ class Profiles extends Model {
     return buffer.toString();
   }
   
-  Profiles copyWith({String? profile_name, double? min_temperature, double? max_temperature, double? min_humidity, double? max_humidity, String? usersID}) {
+  Profiles copyWith({String? profile_name, double? min_temperature, double? max_temperature, double? min_humidity, double? max_humidity, double? min_pressure, double? max_pressure, String? usersID}) {
     return Profiles._internal(
       id: id,
       profile_name: profile_name ?? this.profile_name,
@@ -160,6 +176,8 @@ class Profiles extends Model {
       max_temperature: max_temperature ?? this.max_temperature,
       min_humidity: min_humidity ?? this.min_humidity,
       max_humidity: max_humidity ?? this.max_humidity,
+      min_pressure: min_pressure ?? this.min_pressure,
+      max_pressure: max_pressure ?? this.max_pressure,
       usersID: usersID ?? this.usersID);
   }
   
@@ -170,16 +188,18 @@ class Profiles extends Model {
       _max_temperature = (json['max_temperature'] as num?)?.toDouble(),
       _min_humidity = (json['min_humidity'] as num?)?.toDouble(),
       _max_humidity = (json['max_humidity'] as num?)?.toDouble(),
+      _min_pressure = (json['min_pressure'] as num?)?.toDouble(),
+      _max_pressure = (json['max_pressure'] as num?)?.toDouble(),
       _usersID = json['usersID'],
       _createdAt = json['createdAt'] != null ? TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'profile_name': _profile_name, 'min_temperature': _min_temperature, 'max_temperature': _max_temperature, 'min_humidity': _min_humidity, 'max_humidity': _max_humidity, 'usersID': _usersID, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'profile_name': _profile_name, 'min_temperature': _min_temperature, 'max_temperature': _max_temperature, 'min_humidity': _min_humidity, 'max_humidity': _max_humidity, 'min_pressure': _min_pressure, 'max_pressure': _max_pressure, 'usersID': _usersID, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'profile_name': _profile_name, 'min_temperature': _min_temperature, 'max_temperature': _max_temperature, 'min_humidity': _min_humidity, 'max_humidity': _max_humidity, 'usersID': _usersID, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'profile_name': _profile_name, 'min_temperature': _min_temperature, 'max_temperature': _max_temperature, 'min_humidity': _min_humidity, 'max_humidity': _max_humidity, 'min_pressure': _min_pressure, 'max_pressure': _max_pressure, 'usersID': _usersID, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
   static final QueryModelIdentifier<ProfilesModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<ProfilesModelIdentifier>();
@@ -189,6 +209,8 @@ class Profiles extends Model {
   static final QueryField MAX_TEMPERATURE = QueryField(fieldName: "max_temperature");
   static final QueryField MIN_HUMIDITY = QueryField(fieldName: "min_humidity");
   static final QueryField MAX_HUMIDITY = QueryField(fieldName: "max_humidity");
+  static final QueryField MIN_PRESSURE = QueryField(fieldName: "min_pressure");
+  static final QueryField MAX_PRESSURE = QueryField(fieldName: "max_pressure");
   static final QueryField USERSID = QueryField(fieldName: "usersID");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "Profiles";
@@ -237,6 +259,18 @@ class Profiles extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: Profiles.MAX_HUMIDITY,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.double)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: Profiles.MIN_PRESSURE,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.double)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: Profiles.MAX_PRESSURE,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.double)
     ));

@@ -26,7 +26,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   // loading ui state - initially set to a loading state
   bool _isLoading = true;
-  String _email = '';
+  String _username = '';
   String _password = '';
   List<String> profileNames = [];
 
@@ -102,15 +102,31 @@ class _LoginPageState extends State<LoginPage> {
     try {
       List<Users> users = await Amplify.DataStore.query(Users.classType);
       for (Users user in users) {
-        if (user.email == _email && user.password == _password) {
+        if (user.username == _username && user.password == _password) {
+          List<Profiles> userProfiles = await Amplify.DataStore.query(
+            Profiles.classType,
+            where: Profiles.USERSID.eq(user.id),
+          );
+          List<Profiles> activeProfileList = await Amplify.DataStore.query(
+            Profiles.classType,
+            where: Profiles.USERSID.eq(user.id).and(Profiles.ID.eq(user.active_profile_id)),
+          );
+          Profiles activeProfile = activeProfileList[0];
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HomePage(user: user)),
+            MaterialPageRoute(builder: (context) => HomePage(user: user, userProfiles: userProfiles, activeProfile: activeProfile)),
           );
           return;
         }
       }
-      print("Wrong email or password");
+      print("Wrong username or password");
+      // Display scaffold message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Błędna nazwa lub hasło'),
+          duration: Duration(seconds: 3),
+        ),
+      );
     } catch (e) {
       print("Could not query DataStore: " + e.toString());
     }
@@ -153,8 +169,8 @@ class _LoginPageState extends State<LoginPage> {
           TextField(
               onChanged: (value) {
                 setState(() {
-                  if (title == 'Email') {
-                    _email = value;
+                  if (title == 'Nazwa') {
+                    _username = value;
                   } else if (title == 'Hasło') {
                     _password = value;
                   }
@@ -248,7 +264,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _emailPasswordWidget() {
     return Column(
       children: <Widget>[
-        _entryField("Email"),
+        _entryField("Nazwa"),
         _entryField("Hasło", isPassword: true),
       ],
     );
@@ -275,13 +291,6 @@ class _LoginPageState extends State<LoginPage> {
                   _emailPasswordWidget(),
                   SizedBox(height: 20),
                   _submitButton(),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    alignment: Alignment.centerRight,
-                    child: Text('Nie pamiętasz hasła?',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
-                  ),
                   SizedBox(height: height * .055),
                   _createAccountLabel(),
                 ],
