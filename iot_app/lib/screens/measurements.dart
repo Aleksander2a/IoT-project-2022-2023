@@ -27,15 +27,112 @@ import 'package:uuid/uuid.dart';
 
 
 class Measures extends StatefulWidget {
-  Measures({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
+  Measures({Key? key, required this.notifyParent}) : super(key: key);
 
   final Function() notifyParent;
-  Users user;
-  List<Profiles> userProfiles;
-  Profiles activeProfile;
+  late Users user;
+  late List<Profiles> userProfiles;
+  late Profiles activeProfile;
 
   @override
   State<Measures> createState() => _MeasuresState();
+
+  Future<void> _fetchCurrentUserAttributes() async {
+    try {
+      final result = await Amplify.Auth.fetchUserAttributes();
+      for (final element in result) {
+        print('key: ${element.userAttributeKey}; value: ${element.value}');
+      }
+      // get the email from the attributes
+      final user = await Amplify.Auth.getCurrentUser();
+      print("USERNAME=======================" + user.username);
+      final username = user.username;
+      _fetchUser(username);
+      _fetchProfiles();
+      _fetchActiveProfile();
+    } on AuthException catch (e) {
+      print(e.message);
+    }
+  }
+
+  Future<void> _fetchUser(String username) async {
+    try {
+      print('Fetching user...');
+      List<Users> usersList = await Amplify.DataStore.query(
+        Users.classType,
+        where: Users.USERNAME.eq(username),
+      );
+      if (usersList.length > 0) {
+        user = usersList[0];
+        print('User: ${user.id}');
+      } else {
+        print('User not found');
+        // TODO: create user
+        createUser(username);
+      }
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
+  Future<void> createUser(String username) async {
+    final newUser = Users(
+        username: username,
+        UserProfiles: []
+    );
+    final newProfile = Profiles(
+        profile_name: 'Default',
+        min_temperature: 17,
+        max_temperature: 25,
+        min_humidity: 40,
+        max_humidity: 45,
+        min_pressure: 1000,
+        max_pressure: 1020,
+        usersID: newUser.id
+    );
+    final newUserWithDefaultProfile = newUser.copyWith(
+        active_profile_id: newProfile.id,
+        UserProfiles: [newProfile]
+    );
+    try {
+      // save the new User to the DataStore
+      await Amplify.DataStore.save(newUserWithDefaultProfile);
+      await Amplify.DataStore.save(newProfile);
+      user = newUserWithDefaultProfile;
+      userProfiles = newUserWithDefaultProfile.UserProfiles!;
+      activeProfile = newProfile;
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
+  }
+
+  Future<void> _fetchProfiles() async {
+    try {
+      print('Fetching profiles...');
+      userProfiles = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(user.id),
+      );
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
+
+  Future<void> _fetchActiveProfile() async {
+    try {
+      print('Fetching active profile...');
+      List<Profiles> activeProfileList = await Amplify.DataStore.query(
+        Profiles.classType,
+        where: Profiles.USERSID.eq(user.id).and(Profiles.ID.eq(user.active_profile_id)),
+      );
+      activeProfile = activeProfileList[0];
+    } catch (e) {
+      print("Could not query DataStore: " + e.toString());
+      return;
+    }
+  }
 }
 
 class _MeasuresState extends State<Measures>
@@ -135,7 +232,8 @@ class _MeasuresState extends State<Measures>
 
     subscription = client.updates?.listen(_onMessage) as StreamSubscription;
 
-    String topic = '${widget.user.device_id}/sensorData';
+    final user = await Amplify.Auth.getCurrentUser();
+    String topic = '${user.userId}/sensorData';
     client.subscribe(topic, MqttQos.atMostOnce);
 
     return true;
@@ -239,17 +337,18 @@ class _MeasuresState extends State<Measures>
 
   Widget _button(String title) {
     return InkWell(
-      onTap: () {
+      onTap: () async {
+        final user = await Amplify.Auth.getCurrentUser();
         if (title == 'Zatrzymaj') {
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${user.userId}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${user.userId}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(
@@ -388,6 +487,7 @@ class _MeasuresState extends State<Measures>
   @override
   void initState() {
     super.initState();
-    mqttConnect(Uuid().v4());
+    widget._fetchCurrentUserAttributes();
+    //mqttConnect(Uuid().v4());
   }
 }

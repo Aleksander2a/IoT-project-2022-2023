@@ -42,6 +42,8 @@ dependencies:
   amplify_flutter: ^0.6.10
   amplify_datastore: ^0.6.10
   amplify_api: ^0.6.0
+  amplify_auth_cognito: ^0.6.0
+  amplify_authenticator: ^0.2.0
 
 dev_dependencies:
   flutter_test:

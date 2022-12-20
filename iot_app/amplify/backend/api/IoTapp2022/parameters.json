@@ -1,5 +1,6 @@
 {
   "AppSyncApiName": "IoTapp2022",
   "DynamoDBBillingMode": "PAY_PER_REQUEST",
-  "DynamoDBEnableServerSideEncryption": false
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthModeLastUpdated": "2022-12-20T13:03:12.341Z"
 }

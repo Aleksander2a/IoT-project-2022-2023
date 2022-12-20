@@ -28,8 +28,6 @@ import 'package:flutter/foundation.dart';
 class SensorData extends Model {
   static const classType = const _SensorDataModelType();
   final String id;
-  final String? _user_id;
-  final String? _device_id;
   final double? _temperature;
   final double? _humidity;
   final double? _pressure;
@@ -49,32 +47,6 @@ class SensorData extends Model {
       return SensorDataModelIdentifier(
         id: id
       );
-  }
-  
-  String get user_id {
-    try {
-      return _user_id!;
-    } catch(e) {
-      throw new AmplifyCodeGenModelException(
-          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
-  }
-  
-  String get device_id {
-    try {
-      return _device_id!;
-    } catch(e) {
-      throw new AmplifyCodeGenModelException(
-          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
   }
   
   double? get temperature {
@@ -114,13 +86,11 @@ class SensorData extends Model {
     return _updatedAt;
   }
   
-  const SensorData._internal({required this.id, required user_id, required device_id, temperature, humidity, pressure, time, required usersID, createdAt, updatedAt}): _user_id = user_id, _device_id = device_id, _temperature = temperature, _humidity = humidity, _pressure = pressure, _time = time, _usersID = usersID, _createdAt = createdAt, _updatedAt = updatedAt;
+  const SensorData._internal({required this.id, temperature, humidity, pressure, time, required usersID, createdAt, updatedAt}): _temperature = temperature, _humidity = humidity, _pressure = pressure, _time = time, _usersID = usersID, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory SensorData({String? id, required String user_id, required String device_id, double? temperature, double? humidity, double? pressure, TemporalDateTime? time, required String usersID}) {
+  factory SensorData({String? id, double? temperature, double? humidity, double? pressure, TemporalDateTime? time, required String usersID}) {
     return SensorData._internal(
       id: id == null ? UUID.getUUID() : id,
-      user_id: user_id,
-      device_id: device_id,
       temperature: temperature,
       humidity: humidity,
       pressure: pressure,
@@ -137,8 +107,6 @@ class SensorData extends Model {
     if (identical(other, this)) return true;
     return other is SensorData &&
       id == other.id &&
-      _user_id == other._user_id &&
-      _device_id == other._device_id &&
       _temperature == other._temperature &&
       _humidity == other._humidity &&
       _pressure == other._pressure &&
@@ -155,8 +123,6 @@ class SensorData extends Model {
     
     buffer.write("SensorData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("user_id=" + "$_user_id" + ", ");
-    buffer.write("device_id=" + "$_device_id" + ", ");
     buffer.write("temperature=" + (_temperature != null ? _temperature!.toString() : "null") + ", ");
     buffer.write("humidity=" + (_humidity != null ? _humidity!.toString() : "null") + ", ");
     buffer.write("pressure=" + (_pressure != null ? _pressure!.toString() : "null") + ", ");
@@ -169,11 +135,9 @@ class SensorData extends Model {
     return buffer.toString();
   }
   
-  SensorData copyWith({String? user_id, String? device_id, double? temperature, double? humidity, double? pressure, TemporalDateTime? time, String? usersID}) {
+  SensorData copyWith({double? temperature, double? humidity, double? pressure, TemporalDateTime? time, String? usersID}) {
     return SensorData._internal(
       id: id,
-      user_id: user_id ?? this.user_id,
-      device_id: device_id ?? this.device_id,
       temperature: temperature ?? this.temperature,
       humidity: humidity ?? this.humidity,
       pressure: pressure ?? this.pressure,
@@ -183,8 +147,6 @@ class SensorData extends Model {
   
   SensorData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _user_id = json['user_id'],
-      _device_id = json['device_id'],
       _temperature = (json['temperature'] as num?)?.toDouble(),
       _humidity = (json['humidity'] as num?)?.toDouble(),
       _pressure = (json['pressure'] as num?)?.toDouble(),
@@ -194,17 +156,15 @@ class SensorData extends Model {
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'user_id': _user_id, 'device_id': _device_id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time?.format(), 'usersID': _usersID, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time?.format(), 'usersID': _usersID, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'user_id': _user_id, 'device_id': _device_id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time, 'usersID': _usersID, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time, 'usersID': _usersID, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
   static final QueryModelIdentifier<SensorDataModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<SensorDataModelIdentifier>();
   static final QueryField ID = QueryField(fieldName: "id");
-  static final QueryField USER_ID = QueryField(fieldName: "user_id");
-  static final QueryField DEVICE_ID = QueryField(fieldName: "device_id");
   static final QueryField TEMPERATURE = QueryField(fieldName: "temperature");
   static final QueryField HUMIDITY = QueryField(fieldName: "humidity");
   static final QueryField PRESSURE = QueryField(fieldName: "pressure");
@@ -230,18 +190,6 @@ class SensorData extends Model {
     ];
     
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: SensorData.USER_ID,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: SensorData.DEVICE_ID,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: SensorData.TEMPERATURE,

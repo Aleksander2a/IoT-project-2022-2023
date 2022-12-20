@@ -1,7 +1,5 @@
 type SensorData @model @auth(rules: [{allow: public}]) {
   id: ID!
-  user_id: ID!
-  device_id: ID!
   temperature: Float
   humidity: Float
   pressure: Float
@@ -24,9 +22,8 @@ type Profiles @model @auth(rules: [{allow: public}]) {
 type Users @model @auth(rules: [{allow: public}]) {
   id: ID!
   username: String!
-  password: String!
   active_profile_id: ID
-  device_id: String!
   UserProfiles: [Profiles] @hasMany(indexName: "byUsers", fields: ["id"])
   UserSensorData: [SensorData] @hasMany(indexName: "byUsers", fields: ["id"])
 }
+ 

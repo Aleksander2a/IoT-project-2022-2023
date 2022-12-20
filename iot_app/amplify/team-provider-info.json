@@ -10,6 +10,14 @@
       "StackName": "amplify-iotapp2022-staging-112355",
       "StackId": "arn:aws:cloudformation:eu-west-1:496012026433:stack/amplify-iotapp2022-staging-112355/ca7c3b10-8058-11ed-8e51-0ab9a68d3e75",
       "AmplifyAppId": "d3rlq5hnkwmbtx"
+    },
+    "categories": {
+      "auth": {
+        "iotapp20224efb2dcf": {}
+      },
+      "api": {
+        "IoTapp2022": {}
+      }
     }
   }
 }
