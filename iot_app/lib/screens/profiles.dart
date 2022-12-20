@@ -3,15 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_datastore/amplify_datastore.dart';
-// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
-import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
-import 'home.dart';
 
 class ProfilesScreen extends StatefulWidget {
   ProfilesScreen({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);

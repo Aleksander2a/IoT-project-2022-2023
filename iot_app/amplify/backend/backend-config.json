@@ -1,6 +1,6 @@
 {
   "api": {
-    "IoTapp2022": {
+    "IoTagh": {
       "service": "AppSync",
       "providerPlugin": "awscloudformation",
       "dependsOn": [],
@@ -10,7 +10,7 @@
             "authenticationType": "API_KEY",
             "apiKeyConfig": {
               "apiKeyExpirationDays": 30,
-              "description": "This is an api key"
+              "description": "api key description"
             }
           },
           "additionalAuthenticationProviders": [

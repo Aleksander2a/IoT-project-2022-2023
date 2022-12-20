@@ -7,14 +7,11 @@ import 'package:flutter/src/widgets/automatic_keep_alive.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
-import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
 
@@ -50,6 +47,29 @@ class _MeasuresState extends State<Measures>
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
 
+
+  @override
+  void initState() {
+    super.initState();
+    mqttConnect(Uuid().v4());
+    fetchSensorData();
+  }
+
+  Future<void> fetchSensorData() async {
+    if(tempController.text == ''){
+      List<SensorData> sensorData = await Amplify.DataStore.query(
+        SensorData.classType,
+        where: SensorData.USERSID.eq(widget.user.id),
+        sortBy: [SensorData.CREATION_TIME.descending()],
+      );
+      if (sensorData.isNotEmpty) {
+        tempController.text = sensorData[0].temperature.toString();
+        humController.text = sensorData[0].humidity.toString();
+        presController.text = sensorData[0].pressure.toString();
+        setState(() {});
+      }
+    }
+  }
 
   Color isTempOk() {
     if (tempController.text == '') {
@@ -93,14 +113,6 @@ class _MeasuresState extends State<Measures>
     );
   }
 
-  _connect() {
-
-  }
-
-  _disconnect() {
-
-  }
-
   Future<bool> mqttConnect(String uniqueId) async {
     print("Connecting to MQTT");
     ByteData rootCA = await rootBundle.load('assets/certs/RootCA.pem');
@@ -141,7 +153,7 @@ class _MeasuresState extends State<Measures>
     return true;
   }
 
-  void _onMessage(List<mqtt.MqttReceivedMessage> event) {
+  Future<void> _onMessage(List<mqtt.MqttReceivedMessage> event) async {
     final mqtt.MqttPublishMessage recMess =
     event[0].payload as mqtt.MqttPublishMessage;
     final String message =
@@ -163,6 +175,22 @@ class _MeasuresState extends State<Measures>
     print(temperature.toString());
     print(humidity.toString());
     print(pressure.toString());
+
+    final sensorData = SensorData(
+        usersID: widget.user.id,
+        temperature: temperature,
+        humidity: humidity,
+        pressure: pressure,
+        creation_time: TemporalDateTime(DateTime.now())
+    );
+    try {
+      // save the new User to the DataStore
+      await Amplify.DataStore.save(sensorData);
+      // navigate to the home page
+      print("Saved sensor data");
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
   }
 
   void onConnected() {
@@ -383,11 +411,5 @@ class _MeasuresState extends State<Measures>
         ],
       ),
     ));
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    mqttConnect(Uuid().v4());
   }
 }
