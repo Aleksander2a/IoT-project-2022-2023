@@ -1,0 +1,6 @@
+{
+  "AppSyncApiName": "IoTagh",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthModeLastUpdated": "2022-12-20T16:56:10.133Z"
+}

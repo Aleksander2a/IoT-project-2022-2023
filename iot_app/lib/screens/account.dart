@@ -3,14 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_datastore/amplify_datastore.dart';
-// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
-import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 class Account extends StatefulWidget {
   Account({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.notifyParent}) : super(key: key);
@@ -69,9 +68,9 @@ class _AccountState extends State<Account> {
     // get the current text field contents
     print("Obecne hasło: $_currentPassword");
     print("Nowe hasło: $_newPassword");
-    if (_currentPassword == widget.user.password) {
+    if (sha1.convert(utf8.encode(_currentPassword)).toString() == widget.user.password) {
       final newUserChangedPassword = widget.user.copyWith(
-          password: _newPassword
+          password: sha1.convert(utf8.encode(_newPassword)).toString()
       );
 
       // display AlertDialog to confirm the change

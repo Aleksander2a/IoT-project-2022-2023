@@ -2,7 +2,7 @@
   "providers": [
     "awscloudformation"
   ],
-  "projectName": "IoTapp2022",
+  "projectName": "IoTagh",
   "version": "3.1",
   "frontend": "flutter",
   "flutter": {

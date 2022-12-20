@@ -6,12 +6,9 @@ import 'package:iot_app/screens/profiles.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_datastore/amplify_datastore.dart';
-// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
-import '../amplifyconfiguration.dart';
 import '../models/Users.dart';
 import '../models/Profiles.dart';
 
