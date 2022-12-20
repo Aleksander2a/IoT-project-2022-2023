@@ -19,23 +19,22 @@
 
 // ignore_for_file: public_member_api_docs, annotate_overrides, dead_code, dead_codepublic_member_api_docs, depend_on_referenced_packages, file_names, library_private_types_in_public_api, no_leading_underscores_for_library_prefixes, no_leading_underscores_for_local_identifiers, non_constant_identifier_names, null_check_on_nullable_type_parameter, prefer_adjacent_string_concatenation, prefer_const_constructors, prefer_if_null_operators, prefer_interpolation_to_compose_strings, slash_for_doc_comments, sort_child_properties_last, unnecessary_const, unnecessary_constructor_name, unnecessary_late, unnecessary_new, unnecessary_null_aware_assignments, unnecessary_nullable_for_final_variable_declarations, unnecessary_string_interpolations, use_build_context_synchronously
 
-import 'ModelProvider.dart';
 import 'package:amplify_core/amplify_core.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
 
-/** This is an auto generated class representing the Users type in your schema. */
+/** This is an auto generated class representing the SensorData type in your schema. */
 @immutable
-class Users extends Model {
-  static const classType = const _UsersModelType();
+class SensorData extends Model {
+  static const classType = const _SensorDataModelType();
   final String id;
-  final String? _username;
-  final String? _password;
-  final String? _active_profile_id;
+  final String? _user_id;
   final String? _device_id;
-  final List<Profiles>? _UserProfiles;
-  final List<SensorData>? _UserSensorData;
+  final double? _temperature;
+  final double? _humidity;
+  final double? _pressure;
+  final TemporalDateTime? _time;
+  final String? _usersID;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
 
@@ -46,15 +45,15 @@ class Users extends Model {
   @override
   String getId() => id;
   
-  UsersModelIdentifier get modelIdentifier {
-      return UsersModelIdentifier(
+  SensorDataModelIdentifier get modelIdentifier {
+      return SensorDataModelIdentifier(
         id: id
       );
   }
   
-  String get username {
+  String get user_id {
     try {
-      return _username!;
+      return _user_id!;
     } catch(e) {
       throw new AmplifyCodeGenModelException(
           AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
@@ -63,23 +62,6 @@ class Users extends Model {
           underlyingException: e.toString()
           );
     }
-  }
-  
-  String get password {
-    try {
-      return _password!;
-    } catch(e) {
-      throw new AmplifyCodeGenModelException(
-          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
-  }
-  
-  String? get active_profile_id {
-    return _active_profile_id;
   }
   
   String get device_id {
@@ -95,12 +77,33 @@ class Users extends Model {
     }
   }
   
-  List<Profiles>? get UserProfiles {
-    return _UserProfiles;
+  double? get temperature {
+    return _temperature;
   }
   
-  List<SensorData>? get UserSensorData {
-    return _UserSensorData;
+  double? get humidity {
+    return _humidity;
+  }
+  
+  double? get pressure {
+    return _pressure;
+  }
+  
+  TemporalDateTime? get time {
+    return _time;
+  }
+  
+  String get usersID {
+    try {
+      return _usersID!;
+    } catch(e) {
+      throw new AmplifyCodeGenModelException(
+          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
+          recoverySuggestion:
+            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
+          underlyingException: e.toString()
+          );
+    }
   }
   
   TemporalDateTime? get createdAt {
@@ -111,17 +114,18 @@ class Users extends Model {
     return _updatedAt;
   }
   
-  const Users._internal({required this.id, required username, required password, active_profile_id, required device_id, UserProfiles, UserSensorData, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _device_id = device_id, _UserProfiles = UserProfiles, _UserSensorData = UserSensorData, _createdAt = createdAt, _updatedAt = updatedAt;
+  const SensorData._internal({required this.id, required user_id, required device_id, temperature, humidity, pressure, time, required usersID, createdAt, updatedAt}): _user_id = user_id, _device_id = device_id, _temperature = temperature, _humidity = humidity, _pressure = pressure, _time = time, _usersID = usersID, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory Users({String? id, required String username, required String password, String? active_profile_id, required String device_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData}) {
-    return Users._internal(
+  factory SensorData({String? id, required String user_id, required String device_id, double? temperature, double? humidity, double? pressure, TemporalDateTime? time, required String usersID}) {
+    return SensorData._internal(
       id: id == null ? UUID.getUUID() : id,
-      username: username,
-      password: password,
-      active_profile_id: active_profile_id,
+      user_id: user_id,
       device_id: device_id,
-      UserProfiles: UserProfiles != null ? List<Profiles>.unmodifiable(UserProfiles) : UserProfiles,
-      UserSensorData: UserSensorData != null ? List<SensorData>.unmodifiable(UserSensorData) : UserSensorData);
+      temperature: temperature,
+      humidity: humidity,
+      pressure: pressure,
+      time: time,
+      usersID: usersID);
   }
   
   bool equals(Object other) {
@@ -131,14 +135,15 @@ class Users extends Model {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is Users &&
+    return other is SensorData &&
       id == other.id &&
-      _username == other._username &&
-      _password == other._password &&
-      _active_profile_id == other._active_profile_id &&
+      _user_id == other._user_id &&
       _device_id == other._device_id &&
-      DeepCollectionEquality().equals(_UserProfiles, other._UserProfiles) &&
-      DeepCollectionEquality().equals(_UserSensorData, other._UserSensorData);
+      _temperature == other._temperature &&
+      _humidity == other._humidity &&
+      _pressure == other._pressure &&
+      _time == other._time &&
+      _usersID == other._usersID;
   }
   
   @override
@@ -148,12 +153,15 @@ class Users extends Model {
   String toString() {
     var buffer = new StringBuffer();
     
-    buffer.write("Users {");
+    buffer.write("SensorData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("username=" + "$_username" + ", ");
-    buffer.write("password=" + "$_password" + ", ");
-    buffer.write("active_profile_id=" + "$_active_profile_id" + ", ");
+    buffer.write("user_id=" + "$_user_id" + ", ");
     buffer.write("device_id=" + "$_device_id" + ", ");
+    buffer.write("temperature=" + (_temperature != null ? _temperature!.toString() : "null") + ", ");
+    buffer.write("humidity=" + (_humidity != null ? _humidity!.toString() : "null") + ", ");
+    buffer.write("pressure=" + (_pressure != null ? _pressure!.toString() : "null") + ", ");
+    buffer.write("time=" + (_time != null ? _time!.format() : "null") + ", ");
+    buffer.write("usersID=" + "$_usersID" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
@@ -161,61 +169,50 @@ class Users extends Model {
     return buffer.toString();
   }
   
-  Users copyWith({String? username, String? password, String? active_profile_id, String? device_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData}) {
-    return Users._internal(
+  SensorData copyWith({String? user_id, String? device_id, double? temperature, double? humidity, double? pressure, TemporalDateTime? time, String? usersID}) {
+    return SensorData._internal(
       id: id,
-      username: username ?? this.username,
-      password: password ?? this.password,
-      active_profile_id: active_profile_id ?? this.active_profile_id,
+      user_id: user_id ?? this.user_id,
       device_id: device_id ?? this.device_id,
-      UserProfiles: UserProfiles ?? this.UserProfiles,
-      UserSensorData: UserSensorData ?? this.UserSensorData);
+      temperature: temperature ?? this.temperature,
+      humidity: humidity ?? this.humidity,
+      pressure: pressure ?? this.pressure,
+      time: time ?? this.time,
+      usersID: usersID ?? this.usersID);
   }
   
-  Users.fromJson(Map<String, dynamic> json)  
+  SensorData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _username = json['username'],
-      _password = json['password'],
-      _active_profile_id = json['active_profile_id'],
+      _user_id = json['user_id'],
       _device_id = json['device_id'],
-      _UserProfiles = json['UserProfiles'] is List
-        ? (json['UserProfiles'] as List)
-          .where((e) => e?['serializedData'] != null)
-          .map((e) => Profiles.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
-          .toList()
-        : null,
-      _UserSensorData = json['UserSensorData'] is List
-        ? (json['UserSensorData'] as List)
-          .where((e) => e?['serializedData'] != null)
-          .map((e) => SensorData.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
-          .toList()
-        : null,
+      _temperature = (json['temperature'] as num?)?.toDouble(),
+      _humidity = (json['humidity'] as num?)?.toDouble(),
+      _pressure = (json['pressure'] as num?)?.toDouble(),
+      _time = json['time'] != null ? TemporalDateTime.fromString(json['time']) : null,
+      _usersID = json['usersID'],
       _createdAt = json['createdAt'] != null ? TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'device_id': _device_id, 'UserProfiles': _UserProfiles?.map((Profiles? e) => e?.toJson()).toList(), 'UserSensorData': _UserSensorData?.map((SensorData? e) => e?.toJson()).toList(), 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'user_id': _user_id, 'device_id': _device_id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time?.format(), 'usersID': _usersID, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'device_id': _device_id, 'UserProfiles': _UserProfiles, 'UserSensorData': _UserSensorData, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'user_id': _user_id, 'device_id': _device_id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'time': _time, 'usersID': _usersID, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
-  static final QueryModelIdentifier<UsersModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<UsersModelIdentifier>();
+  static final QueryModelIdentifier<SensorDataModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<SensorDataModelIdentifier>();
   static final QueryField ID = QueryField(fieldName: "id");
-  static final QueryField USERNAME = QueryField(fieldName: "username");
-  static final QueryField PASSWORD = QueryField(fieldName: "password");
-  static final QueryField ACTIVE_PROFILE_ID = QueryField(fieldName: "active_profile_id");
+  static final QueryField USER_ID = QueryField(fieldName: "user_id");
   static final QueryField DEVICE_ID = QueryField(fieldName: "device_id");
-  static final QueryField USERPROFILES = QueryField(
-    fieldName: "UserProfiles",
-    fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (Profiles).toString()));
-  static final QueryField USERSENSORDATA = QueryField(
-    fieldName: "UserSensorData",
-    fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (SensorData).toString()));
+  static final QueryField TEMPERATURE = QueryField(fieldName: "temperature");
+  static final QueryField HUMIDITY = QueryField(fieldName: "humidity");
+  static final QueryField PRESSURE = QueryField(fieldName: "pressure");
+  static final QueryField TIME = QueryField(fieldName: "time");
+  static final QueryField USERSID = QueryField(fieldName: "usersID");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
-    modelSchemaDefinition.name = "Users";
-    modelSchemaDefinition.pluralName = "Users";
+    modelSchemaDefinition.name = "SensorData";
+    modelSchemaDefinition.pluralName = "SensorData";
     
     modelSchemaDefinition.authRules = [
       AuthRule(
@@ -228,44 +225,52 @@ class Users extends Model {
         ])
     ];
     
+    modelSchemaDefinition.indexes = [
+      ModelIndex(fields: const ["usersID"], name: "byUsers")
+    ];
+    
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.USERNAME,
+      key: SensorData.USER_ID,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.PASSWORD,
+      key: SensorData.DEVICE_ID,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.ACTIVE_PROFILE_ID,
+      key: SensorData.TEMPERATURE,
       isRequired: false,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+      ofType: ModelFieldType(ModelFieldTypeEnum.double)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: Users.DEVICE_ID,
+      key: SensorData.HUMIDITY,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.double)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: SensorData.PRESSURE,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.double)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: SensorData.TIME,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.dateTime)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: SensorData.USERSID,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.hasMany(
-      key: Users.USERPROFILES,
-      isRequired: false,
-      ofModelName: (Profiles).toString(),
-      associatedKey: Profiles.USERSID
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.hasMany(
-      key: Users.USERSENSORDATA,
-      isRequired: false,
-      ofModelName: (SensorData).toString(),
-      associatedKey: SensorData.USERSID
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.nonQueryField(
@@ -284,25 +289,25 @@ class Users extends Model {
   });
 }
 
-class _UsersModelType extends ModelType<Users> {
-  const _UsersModelType();
+class _SensorDataModelType extends ModelType<SensorData> {
+  const _SensorDataModelType();
   
   @override
-  Users fromJson(Map<String, dynamic> jsonData) {
-    return Users.fromJson(jsonData);
+  SensorData fromJson(Map<String, dynamic> jsonData) {
+    return SensorData.fromJson(jsonData);
   }
 }
 
 /**
  * This is an auto generated class representing the model identifier
- * of [Users] in your schema.
+ * of [SensorData] in your schema.
  */
 @immutable
-class UsersModelIdentifier implements ModelIdentifier<Users> {
+class SensorDataModelIdentifier implements ModelIdentifier<SensorData> {
   final String id;
 
-  /** Create an instance of UsersModelIdentifier using [id] the primary key. */
-  const UsersModelIdentifier({
+  /** Create an instance of SensorDataModelIdentifier using [id] the primary key. */
+  const SensorDataModelIdentifier({
     required this.id});
   
   @override
@@ -320,7 +325,7 @@ class UsersModelIdentifier implements ModelIdentifier<Users> {
   String serializeAsString() => serializeAsMap().values.join('#');
   
   @override
-  String toString() => 'UsersModelIdentifier(id: $id)';
+  String toString() => 'SensorDataModelIdentifier(id: $id)';
   
   @override
   bool operator ==(Object other) {
@@ -328,7 +333,7 @@ class UsersModelIdentifier implements ModelIdentifier<Users> {
       return true;
     }
     
-    return other is UsersModelIdentifier &&
+    return other is SensorDataModelIdentifier &&
       id == other.id;
   }
   

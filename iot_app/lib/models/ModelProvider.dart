@@ -21,16 +21,18 @@
 
 import 'package:amplify_core/amplify_core.dart';
 import 'Profiles.dart';
+import 'SensorData.dart';
 import 'Users.dart';
 
 export 'Profiles.dart';
+export 'SensorData.dart';
 export 'Users.dart';
 
 class ModelProvider implements ModelProviderInterface {
   @override
-  String version = "7b4a278aba4357c58834f405c81b5c55";
+  String version = "94fcca97d0a8c26f8a9e0defa5ccf1d8";
   @override
-  List<ModelSchema> modelSchemas = [Profiles.schema, Users.schema];
+  List<ModelSchema> modelSchemas = [Profiles.schema, SensorData.schema, Users.schema];
   static final ModelProvider _instance = ModelProvider();
   @override
   List<ModelSchema> customTypeSchemas = [];
@@ -41,6 +43,8 @@ class ModelProvider implements ModelProviderInterface {
     switch(modelName) {
       case "Profiles":
         return Profiles.classType;
+      case "SensorData":
+        return SensorData.classType;
       case "Users":
         return Users.classType;
       default:

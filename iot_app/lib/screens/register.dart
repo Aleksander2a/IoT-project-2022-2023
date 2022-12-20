@@ -6,7 +6,7 @@ import 'login.dart';
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
-// import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
@@ -59,8 +59,11 @@ class _SignUpPageState extends State<SignUpPage> {
       // amplify plugins
       final _dataStorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
 
+      // Add the following line and update your function call with `addPlugins`
+      final api = AmplifyAPI();
+
       // add Amplify plugins
-      await Amplify.addPlugins([_dataStorePlugin]);
+      await Amplify.addPlugins([_dataStorePlugin, api]);
 
       // configure Amplify
       //
