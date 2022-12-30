@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "537931363375",
+    "project_id": "iot-notifications-c1ff3",
+    "storage_bucket": "iot-notifications-c1ff3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:537931363375:android:3543b740e7d764872e82da",
+        "android_client_info": {
+          "package_name": "com.example.iot_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "537931363375-qbkh5ur50ro1eipai5q4tsljjqoj306o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAb9x1Amd8ZWlIlF9Tsrk-E2RO9ZxN9CUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "537931363375-qbkh5ur50ro1eipai5q4tsljjqoj306o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "537931363375-14281b9sop4t2e909ma1kd0n1hqs81i4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.iotApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
