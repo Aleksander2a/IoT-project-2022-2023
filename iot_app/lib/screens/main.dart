@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/welcome.dart';
 
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: WelcomePage(),
+      builder: EasyLoading.init(),
     );
   }
 }

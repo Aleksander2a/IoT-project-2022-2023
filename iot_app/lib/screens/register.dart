@@ -15,15 +15,17 @@ import '../models/Users.dart';
 import '../models/Profiles.dart';
 
 class SignUpPage extends StatefulWidget {
-  SignUpPage({Key? key, this.title}) : super(key: key);
+  SignUpPage(this.uid, {Key? key, this.title}) : super(key: key);
 
   final String? title;
+  final String uid;
 
   @override
-  _SignUpPageState createState() => _SignUpPageState();
+  _SignUpPageState createState() => _SignUpPageState(uid);
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  _SignUpPageState(String uid){_deviceId=uid;}
   // loading ui state - initially set to a loading state
   bool _isLoading = true;
   String _username = '';
@@ -159,26 +161,6 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  Widget _backButton() {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10),
-        child: Row(
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.only(left: 0, top: 10, bottom: 10),
-              child: Icon(Icons.keyboard_arrow_left, color: Colors.black),
-            ),
-            Text('Wróć',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500))
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _entryField(String title, {bool isPassword = false}) {
     return Container(
@@ -198,8 +180,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 setState(() {
                   if (title == 'Nazwa') {
                     _username = value;
-                  } else if (title == 'ID Urządzenia') {
-                    _deviceId = value;
                   } else if (title == 'Hasło') {
                     _password = value;
                   }
@@ -294,7 +274,6 @@ class _SignUpPageState extends State<SignUpPage> {
     return Column(
       children: <Widget>[
         _entryField("Nazwa"),
-        _entryField("ID Urządzenia"),
         _entryField("Hasło", isPassword: true),
       ],
     );
@@ -331,7 +310,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
             ),
-            Positioned(top: 40, left: 0, child: _backButton()),
           ],
         ),
       ),

@@ -7,6 +7,7 @@ import 'package:iot_app/screens/register.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:amplify_api/amplify_api.dart'; // UNCOMMENT this line after backend is deployed
+import 'package:iot_app/screens/wificonnect.dart';
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
@@ -200,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => SignUpPage()));
+            context, MaterialPageRoute(builder: (context) => WifiConnectPage()));
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),
