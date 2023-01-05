@@ -151,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => WifiConnectPage()));
+            context, MaterialPageRoute(builder: (context) => WifiConnectPage(true)));
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),

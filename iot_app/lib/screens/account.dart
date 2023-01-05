@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:iot_app/screens/wificonnect.dart';
 
 // Generated in previous step
 import '../models/ModelProvider.dart';
@@ -27,7 +28,6 @@ class _AccountState extends State<Account> {
   String _username = '';
   String _currentPassword = '';
   String _newPassword = '';
-  String _deviceId = '';
 
   Widget _entryField(String title, {bool isPassword = false}) {
     return Container(
@@ -50,8 +50,6 @@ class _AccountState extends State<Account> {
                 _currentPassword = value;
               } else if (title == 'Nowe hasło') {
                 _newPassword = value;
-              } else if (title == 'ID urządzenia: ' + widget.user.device_id) {
-                _deviceId = value;
               }
             },
               obscureText: isPassword,
@@ -204,59 +202,6 @@ class _AccountState extends State<Account> {
     }
   }
 
-  Future<void> _changeDeviceId() async {
-    print("ID urządzenia: $_deviceId");
-    // get the current text field contents
-    final newUserChangedDeviceId = widget.user.copyWith(
-        device_id: _deviceId
-    );
-    // display AlertDialog to confirm the change
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Potwierdź zmianę ID urządzenia'),
-          content: Text('Czy na pewno chcesz zmienić ID urządzenia na $_deviceId?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Anuluj'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Zmień'),
-              onPressed: () async {
-                try {
-                  // save the new User to the DataStore
-                  await Amplify.DataStore.save(newUserChangedDeviceId);
-                  // refresh the UI
-                  setState(() {});
-                } catch (e) {
-                  safePrint('An error occurred while changing device ID: $e');
-                  // show a failure message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Wystąpił błąd. Nie zachowano zmian.'),
-                    ),
-                  );
-                  Navigator.of(context).pop();
-                  return;
-                }
-                // show a success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('ID urządzenia zostało zmienione'),
-                  ),
-                );
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _submitButton(String text) {
     return InkWell(
@@ -267,9 +212,10 @@ class _AccountState extends State<Account> {
         } else if (text == "Zmień nazwę") {
           _changeUsername();
           // TODO: clear the text fields
-        } else if (text == "Zmień ID urządzenia") {
+        } else if (text == "Zmień sieć") {
           // TODO: clear the text fields
-          _changeDeviceId();
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => WifiConnectPage(false)));
         }
         widget.notifyParent();
       },
@@ -329,10 +275,13 @@ class _AccountState extends State<Account> {
                       _newPasswordWidget(),
                       SizedBox(height: 15),
                       _submitButton("Zmień hasło"),
+                      SizedBox(height: 25),
+                      Text(
+                          "Ustawienia sieci",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
+                      ),
                       SizedBox(height: 15),
-                      _entryField("ID urządzenia: " + widget.user.device_id),
-                      SizedBox(height: 15),
-                      _submitButton("Zmień ID urządzenia"),
+                      _submitButton("Zmień sieć"),
                     ],
                   ),
                 ),

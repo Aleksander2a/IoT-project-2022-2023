@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
+import 'package:iot_app/screens/welcome.dart';
 import 'login.dart';
 import 'register.dart';
 
@@ -20,32 +21,35 @@ import '../models/Profiles.dart';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:restart_app/restart_app.dart';
 
 class WifiConnectPage extends StatefulWidget {
-  WifiConnectPage({Key? key, this.title}) : super(key: key);
+  WifiConnectPage(this.isRegistering, {Key? key}) : super(key: key);
 
-  final String? title;
+  String? title;
+  bool isRegistering;
 
   @override
-  _WifiConnectState createState() => _WifiConnectState();
+  _WifiConnectState createState() => _WifiConnectState(isRegistering);
 }
 
 class _WifiConnectState extends State<WifiConnectPage>{
-  // loading ui state - initially set to a loading state
-  bool _isLoading = true;
+  _WifiConnectState(bool isReg){
+    _isRegistering=isReg;
+  }
   String _ssid = '';
-  String _deviceId = '';
   String _password = '';
+  bool _isRegistering = false;
 
   @override
   void initState() {
     super.initState();
-    init();;
+    init();
   }
   void init() async {
     await AndroidFlutterWifi.init();
-    var isConnected = await AndroidFlutterWifi.isConnected();
-    print('Is connected: ${isConnected.toString()}');
+    await AndroidFlutterWifi.disableWifi();
+    await AndroidFlutterWifi.enableWifi();
   }
 
 
@@ -196,7 +200,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
     var response= await http.get(
         Uri.parse('http://192.168.4.1')
     );
-    await http.post(
+    http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
         'ssid': _ssid,
@@ -207,6 +211,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
 
   Future<bool> _isESPConnectedToWiFi() async {
+    init();
     await Future.delayed(Duration(seconds: 6));
     String ssid = "ESP32-Access-Point";
     String password = "IOTagh-2022";
@@ -215,18 +220,25 @@ class _WifiConnectState extends State<WifiConnectPage>{
     return !isAPAvailable;
   }
   void _onclick() async{
+    FocusManager.instance.primaryFocus?.unfocus();
     EasyLoading.instance
       ..userInteractions = false
       ..dismissOnTap = false;
     EasyLoading.show(status: 'ładowanie...');
-    //if(!await _connectToAP())return;
+    if(!await _connectToAP())return;
     if(_ssid==""){_showEmptySSIDDialog();return;}
     final response=await _sendWiFiCredentials();
-    //if(!await _isESPConnectedToWiFi()){_showWrongWiFiCredentialsDialog();return;}
+    if(!await _isESPConnectedToWiFi())return;
     print("RESPONSE: ${response.body}");
-    EasyLoading.dismiss();
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => SignUpPage(response.body.trim())));
+    if(_isRegistering){
+      EasyLoading.dismiss();
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => SignUpPage(response.body.trim())));
+    }
+    else{
+      await Future.delayed(Duration(seconds: 2));
+      Restart.restartApp();
+    }
   }
   Widget _submitButton() {
     return InkWell(
@@ -280,6 +292,24 @@ class _WifiConnectState extends State<WifiConnectPage>{
     );
   }
 
+  Widget _header(bool isRegistering) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+              isRegistering?"Podaj dane:":"Zrestartuj urządzenie i podaj dane. Następnie zaloguj się ponownie.",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -297,6 +327,8 @@ class _WifiConnectState extends State<WifiConnectPage>{
                   children: <Widget>[
                     SizedBox(height: height * .2),
                     _title(),
+                    SizedBox(height: 20),
+                    _header(_isRegistering),
                     SizedBox(
                       height: 50,
                     ),

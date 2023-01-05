@@ -100,7 +100,7 @@ class _WelcomePageState extends State<WelcomePage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => WifiConnectPage()));
+            context, MaterialPageRoute(builder: (context) => WifiConnectPage(true)));
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
