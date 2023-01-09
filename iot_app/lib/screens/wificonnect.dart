@@ -211,7 +211,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
 
   Future<bool> _isESPConnectedToWiFi() async {
-    init();
     await Future.delayed(Duration(seconds: 6));
     String ssid = "ESP32-Access-Point";
     String password = "IOTagh-2022";
@@ -235,10 +234,8 @@ class _WifiConnectState extends State<WifiConnectPage>{
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => SignUpPage(response.body.trim())));
     }
-    else{
-      await Future.delayed(Duration(seconds: 2));
+    else
       Restart.restartApp();
-    }
   }
   Widget _submitButton() {
     return InkWell(
