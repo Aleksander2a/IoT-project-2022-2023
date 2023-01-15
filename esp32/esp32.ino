@@ -9,6 +9,8 @@ extern "C" {
   #include "freertos/FreeRTOS.h"
   #include "freertos/timers.h"
 }
+#include <Crypto.h>
+#include <Arduino.h>
 
 #define THING_NAME "esp32"
 #define AWS_HOST "a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com"
@@ -105,6 +107,84 @@ sFySluQqniBcLl163oVDu8VwQ+iMjV5CmX1hc9oHVMxKZhmntXYF
 -----END RSA PRIVATE KEY-----
 )EOF";
 
+
+// ===================================================== RSA BEGIN =====================================================
+/*
+#include <RSA.h>
+
+const char* app_public_key = R"EOF(
+-----BEGIN PUBLIC KEY-----
+MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgG8B8gESsUV9lgbkjTl4zzs+UmiW
+p71CWElQlrICW32JRAjqjSuwOYnjEwtJlExkDtywsyuzI+hZTqJkDuMBdygu6qaV
+HhTXqy9ew/XommRYFR+nHpuJAC3cl2/rBcnJ6ybthFK2bXjwceEhiyGMNh57zOPV
+P9FsLiQQggBRFF9zAgMBAAE=
+-----END PUBLIC KEY-----
+)EOF";
+
+const char* esp_private_key = R"EOF(
+-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQC8BZJdirXnN+CqOBGhlj54tc6hBXg5ty2KHlbm48NuoPupoU/M
+8NqMoaj/CF7eLj1UHC7VoGPHZFpk4UbFNyq++rCvEW0ubk9ptf3wyZeUZfoQle+N
+OIb0161t4vtuwRPUNrJIexXbnz8VOko9TIea2Zjkow8v9Guo1DpW3HMxuwIDAQAB
+AoGAVp/yiSpJGFgEKChg5yODcLXClykf9OdSEdpci0/QUH3WtJZfX7pv1m78n1NJ
+8e83zjKV2VJl5g10IBoyMtZx2HT4VKSCnd6dqOuyVz162ccXsY+zkX9XZCOteMM/
+dh5/l7q/HxQ0D2YT4zMEOpx+YRkGWpD0fPL2dSibn4tZ1VECQQDjfxZCmWO3iepl
+AuEH0ytZkY1l6M5c40kbn2QGPqfrA4MQ5TgUT5F/S+VYZQUIU2VlJUnGN5snZDya
+TcUKivkdAkEA05RXQw6UHm8FP44fLB7u5AERsw+AjNl61qWQCXfVuYtjmBEujodz
+QueG2OVke/M//YC3Vt9u48GkxNRNhps2twJBANeqlj7CzY6kt0nVReG2JkV+P87Z
+ujDC437FRvzIj0WziaANvXE70VIdcCmxcujmrpwJknvQIU1hsDYT/fU1tF0CQGY3
+rojZDDo/zLtNwEWilCtXUOO/Q43IrA3zYskQOhMwAme/NUzqp4bVMFKtUISJmoqw
+muK/g2VJcn8dSm8TobUCQCF3LcJSt6QHC0K09LxK7izYDNqn0mpJkBwMBiSUZgEM
+tJopM0QpJs46yR5eCoxsU+pUUxsROb7zhN9JbRdfB6U=
+-----END RSA PRIVATE KEY-----
+)EOF";
+
+
+RSA decrypter;
+RSA encrypter;
+
+String decryptMessageRSA(const char* cipherText) {
+  char plainText[256];
+  decrypter.begin(RSA_PRIVATE, esp_private_key);
+  int len = decrypter.privateDecrypt(cipherText, strlen(cipherText), plainText);
+  plainText[len] = '\0';
+  return String(plainText);
+}
+
+String encryptMessageRSA(const char* plainText) {
+  char cipherText[256];
+  encrypter.begin(RSA_PUBLIC, app_public_key);
+  int len = encrypter.publicEncrypt(plainText, strlen(plainText), cipherText);
+  cipherText[len] = '\0';
+  return String(cipherText);
+}
+*/
+// ===================================================== RSA END =====================================================
+
+// ===================================================== AES BEGIN =====================================================
+#include <AES.h>
+#include <AESLib.h>
+
+String key = "my 32 length key................";
+String iv = "my 16 length iv!";
+
+AES aes;
+
+String decryptMessageAES(const char* ciphertext) {
+  aes.set_key((byte*)key.c_str(), key.length());
+  byte decrypted[strlen(ciphertext) / 2];
+  aes.cbc_decrypt((byte*)ciphertext, decrypted, strlen(ciphertext) / 2, (byte*)iv.c_str());
+  return (char*)decrypted;
+}
+
+String encryptMessageAES(const char* plaintext) {
+  aes.set_key((byte*)key.c_str(), key.length());
+  byte encrypted[strlen(plaintext)];
+  aes.cbc_encrypt((byte*)plaintext, encrypted, strlen(plaintext), (byte*)iv.c_str());
+  return String((char*)encrypted);
+}
+// ===================================================== AES END =====================================================
+
 bool stopPublishing;
 
 void msgReceived(char* topic, byte* payload, unsigned int length) {
@@ -122,6 +202,7 @@ void msgReceived(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, message);
   const char* command = doc["Command"];
+  command = decryptMessageAES(command).c_str();
   // Execute command in message
   Serial.print("Command to exetute is: "); Serial.println(command);
   if (strcmp(command, "Stop")==0) {
@@ -179,7 +260,7 @@ void loop(){
 
   // AWS publish message
   char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
+  sprintf(sensorData, "{\"Temperature\": %s, \"Humidity\": %s, \"Pressure\": %s}", encryptMessageAES(String(T).c_str()), encryptMessageAES(String(h).c_str()), encryptMessageAES(String(p).c_str()));
   if(stopPublishing==false) {
     boolean rc = pubSubClient.publish((WiFi.macAddress()+"/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
@@ -206,7 +287,7 @@ void responseToGET(WiFiClient client){
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println(WiFi.macAddress());
+  client.println(encryptMessageAES(WiFi.macAddress().c_str()));
   client.println();
 }
 void responseToPOST(WiFiClient client){
@@ -218,6 +299,8 @@ void responseToPOST(WiFiClient client){
   WiFi.mode(WIFI_AP_STA);
   getSsidAndPassword(header);
   Serial.print(" Connecting to "); Serial.print(ssidWiFi);
+  Serial.println("");
+  Serial.print("Password: "); Serial.println(passwordWiFi);
   if(passwordWiFi=="")WiFi.begin(ssidWiFi.c_str());
   else WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
   int r=0; //retry counter
@@ -243,10 +326,10 @@ void getSsidAndPassword(String header){
   int appersantidx = payload.indexOf('&');
   String ssidPart = payload.substring(0,appersantidx);
   int eqidx = ssidPart.indexOf('=');
-  ssidWiFi = ssidPart.substring(eqidx+1);
+  ssidWiFi = decryptMessageAES(ssidPart.substring(eqidx+1).c_str());
   String pwdPart = payload.substring(appersantidx+1);
   eqidx = pwdPart.indexOf('=');
-  passwordWiFi = pwdPart.substring(eqidx+1); 
+  passwordWiFi = decryptMessageAES(pwdPart.substring(eqidx+1).c_str()); 
 }
 int getContentLength(String header){
   String cl_str = "content-length: ";
