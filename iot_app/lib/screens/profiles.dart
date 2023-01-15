@@ -238,7 +238,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
       children: <Widget>[
         Text(
           'Aktywny profil',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
         SizedBox(
           width: 10,
@@ -480,9 +480,9 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
                       children: <Widget>[
                         Text(
                           "Nazwa profilu",
-                          style: TextStyle(fontSize: 15),
+                          style: TextStyle(fontSize: 13),
                         ),
-                        _entryField(fieldFor: "profileName", width: 100),
+                        _entryField(fieldFor: "profileName", width: 90),
                         _button("Dodaj"),
                       ]),
                   // SizedBox(height: 20),

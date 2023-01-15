@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
 import 'package:iot_app/screens/register.dart';
+import 'package:iot_app/screens/wificonnect.dart';
 
 // Amplify Flutter Packages
 import 'package:amplify_flutter/amplify_flutter.dart';
@@ -150,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => SignUpPage()));
+            context, MaterialPageRoute(builder: (context) => WifiConnectPage(true)));
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),

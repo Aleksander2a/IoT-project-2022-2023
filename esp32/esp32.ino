@@ -206,33 +206,15 @@ void responseToGET(WiFiClient client){
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println("<!DOCTYPE html>");
-  client.println("<html lang=\"en\">");
-  client.println("<head>");
-  client.println("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">");
-  client.println("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-  client.println("<meta charset=\"UTF-8\">");
-  client.println("<title>ESP32 Config</title>");
-  client.println("<style>");
-  client.println("body{display: flex;align-items: center;justify-content: center;flex-direction: column;}");
-  client.println("</style>");
-  client.println("</head>");
-  client.println("<body>");
-  client.println("<h2>Konfiguracja połączenia urządzenia z routerem WiFi</h2>");
-  client.println("<p>Podaj dane sieci, do której chcesz podłączyć urządzenie. Po zatwierdzeniu danych, połączenie z "+String(ssidAP)+" urwie się. Jeśli dane będą poprawne, sieć "+String(ssidAP)+" przestanie być widoczna, w innym przypadku należy ponownie połączyć się z "+String(ssidAP)+" i podać dane.</p>");
-  client.println("<p>Unikalny kod twojego urządzenia to <b>"+WiFi.macAddress()+"</b>. Zapamiętaj go, będzie ci potrzebny podczas rejestracji w aplikacji.</p>");
-  client.println("<form method=\"post\">");
-  client.println("<label for=\"ssid\">SSID:</label><br>");
-  client.println("<input type=\"text\" id=\"ssid\" name=\"ssid\" required><br>");
-  client.println("<label for=\"pwd\">Hasło:</label><br>");
-  client.println("<input type=\"password\" id=\"pwd\" name=\"pwd\" ><br><br>");
-  client.println("<input type=\"submit\" value=\"Zaakceptuj\">");
-  client.println("</form>");
-  client.println("</body>");
-  client.println("</html>");
+  client.println(WiFi.macAddress());
   client.println();
 }
 void responseToPOST(WiFiClient client){
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type:text/html");
+  client.println("Connection: close");
+  client.println();
+
   WiFi.mode(WIFI_AP_STA);
   getSsidAndPassword(header);
   Serial.print(" Connecting to "); Serial.print(ssidWiFi);
@@ -267,7 +249,7 @@ void getSsidAndPassword(String header){
   passwordWiFi = pwdPart.substring(eqidx+1); 
 }
 int getContentLength(String header){
-  String cl_str = "Content-Length: ";
+  String cl_str = "content-length: ";
   int cl_index=header.indexOf(cl_str);
   char cl_first_digit = header[cl_index + cl_str.length()];
   String cl_number_str="";
@@ -309,7 +291,8 @@ void connectToWiFiUsingAP(){
         else if (POSTcont_len==0 && header[0]=='P' && POSTpayload) {
           responseToPOST(client);
           break;
-        } else if (c != '\r') {
+        } 
+        else if (c != '\r') {
           currentLine += c;
         }
       }
