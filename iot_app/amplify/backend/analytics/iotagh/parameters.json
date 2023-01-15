@@ -1,0 +1,21 @@
+{
+    "appName": "iotagh",
+    "roleName": "pinpointLambdaRoleb67936d9",
+    "cloudformationPolicyName": "cloudformationPolicyb67936d9",
+    "cloudWatchPolicyName": "cloudWatchPolicyb67936d9",
+    "pinpointPolicyName": "pinpointPolicyb67936d9",
+    "authPolicyName": "pinpoint_amplify_b67936d9",
+    "unauthPolicyName": "pinpoint_amplify_b67936d9",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    }
+}

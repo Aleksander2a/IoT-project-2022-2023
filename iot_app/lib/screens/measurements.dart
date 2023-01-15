@@ -21,6 +21,8 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
+import '../utils/RSAEncryption.dart';
+import '../utils/AESEncryption.dart';
 
 
 class Measures extends StatefulWidget {
@@ -46,6 +48,7 @@ class _MeasuresState extends State<Measures>
   TextEditingController tempController = TextEditingController();
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
+  late AESEncryption _aesEncryption;
 
 
   @override
@@ -53,6 +56,7 @@ class _MeasuresState extends State<Measures>
     super.initState();
     mqttConnect(Uuid().v4());
     fetchSensorData();
+    _aesEncryption = AESEncryption();
   }
 
   Future<void> fetchSensorData() async {
@@ -160,9 +164,12 @@ class _MeasuresState extends State<Measures>
     mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
     print('MQTT message: topic is <${event[0].topic}>, payload is <-- $message -->');
     Map valueMap = json.decode(message);
-    temperature = valueMap['Temperature'].toDouble();
-    humidity = valueMap['Humidity'].toDouble();
-    pressure = valueMap['Pressure'].toDouble();
+    var decryptedTemp = _aesEncryption.decrypt(valueMap['temperature'].toString());
+    var decryptedHum = _aesEncryption.decrypt(valueMap['humidity'].toString());
+    var decryptedPres = _aesEncryption.decrypt(valueMap['pressure'].toString());
+    temperature = double.parse(decryptedTemp);
+    humidity = double.parse(decryptedHum);
+    pressure = double.parse(decryptedPres);
     // Round to 1 decimal places
     temperature = (temperature * 10).round() / 10;
     humidity = (humidity * 10).round() / 10;
@@ -271,12 +278,14 @@ class _MeasuresState extends State<Measures>
         if (title == 'Zatrzymaj') {
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
-          builder.addString('{"Command": "Stop"}');
+          var encryptedStop = _aesEncryption.encrypt('Stop');
+          builder.addString('{"Command": "$encryptedStop"}');
           client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
-          builder.addString('{"Command": "Resume"}');
+          var encryptedResume = _aesEncryption.encrypt('Resume');
+          builder.addString('{"Command": "$encryptedResume"}');
           client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
