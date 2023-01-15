@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
 import 'package:iot_app/screens/welcome.dart';
@@ -23,6 +24,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:restart_app/restart_app.dart';
 
+import '../utils/RSAEncryption.dart';
+import '../utils/AESEncryption.dart';
+
 class WifiConnectPage extends StatefulWidget {
   WifiConnectPage(this.isRegistering, {Key? key}) : super(key: key);
 
@@ -40,6 +44,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
   String _ssid = '';
   String _password = '';
   bool _isRegistering = false;
+  late AESEncryption _aesEncryption;
 
   @override
   void initState() {
@@ -50,6 +55,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
     await AndroidFlutterWifi.init();
     await AndroidFlutterWifi.disableWifi();
     await AndroidFlutterWifi.enableWifi();
+    _aesEncryption = AESEncryption();
   }
 
 
@@ -200,11 +206,13 @@ class _WifiConnectState extends State<WifiConnectPage>{
     var response= await http.get(
         Uri.parse('http://192.168.4.1')
     );
-    http.post(
+    var encryptedSSID = _aesEncryption.encrypt(_ssid);
+    var encryptedPassword = _aesEncryption.encrypt(_password);
+    await http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
-        'ssid': _ssid,
-        'pwd': _password
+        'ssid': encryptedSSID,
+        'pwd': encryptedPassword
       },
     );
     return response;
@@ -229,10 +237,11 @@ class _WifiConnectState extends State<WifiConnectPage>{
     final response=await _sendWiFiCredentials();
     if(!await _isESPConnectedToWiFi())return;
     print("RESPONSE: ${response.body}");
+    var decryptedResponse = _aesEncryption.decrypt(response.body.trim());
     if(_isRegistering){
       EasyLoading.dismiss();
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => SignUpPage(response.body.trim())));
+          context, MaterialPageRoute(builder: (context) => SignUpPage(decryptedResponse)));
     }
     else
       Restart.restartApp();
