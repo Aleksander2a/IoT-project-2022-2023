@@ -10,6 +10,8 @@ extern "C" {
 #include "freertos/timers.h"
 }
 #include <EEPROM.h>
+#include <FS.h>
+#include <SPIFFS.h>
 
 #define THING_NAME "esp32"
 #define AWS_HOST "a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com"
@@ -145,6 +147,7 @@ PubSubClient pubSubClient(AWS_HOST, 8883, msgReceived, net);
 // ===================================================== SETUP BEGIN =====================================================
 void setup() {
   Serial.begin(115200);
+  SPIFFS.begin();
   if (!bme.begin(0x76)) {
     Serial.print("Can't detect sensor !!!");
     delay(10000);
@@ -160,12 +163,12 @@ void setup() {
   Serial.print("Your ESP Board MAC Address is:  ");
   Serial.println(WiFi.macAddress());
 
-  // check if ssid and password are saved in flash and if can connect with them
-  ssidWiFi = readStringFromEEPROM(0);
-  Serial.println("SSID from memory: " + ssidWiFi);
+  // check if ssid and password are saved in file and if can connect with them
+  Serial.println("Read WiFi data from file...");
+  readSsidAndPasswordFromFile();
+  Serial.println("SSID from file: " + ssidWiFi);
+  Serial.println("PASSWORD from file: " + passwordWiFi);
   if(ssidWiFi != "") {
-    passwordWiFi = readStringFromEEPROM(ssidWiFi.length()+1);
-    Serial.println("PASSWORD from memory: " + passwordWiFi);
     if (passwordWiFi == "") {
       WiFi.begin(ssidWiFi.c_str());
     }
@@ -276,33 +279,47 @@ bool responseToPOST(WiFiClient client) {
   } else {
     Serial.println("WiFi connected, IP address: ");
     WiFi.mode(WIFI_STA);
-    // save ssid and password to flash memeory
-    writeStringToEEPROM(0, ssidWiFi);
-    writeStringToEEPROM(ssidWiFi.length()+1, passwordWiFi); 
+    // save ssid and password to file
+    Serial.println("Saving WiFi data to file...");
+    writeSsidAndPasswordToFile();
     return true;
   }
 }
 
-void writeStringToEEPROM(int addrOffset, const String &strToWrite)
-{
-  byte len = strToWrite.length();
-  EEPROM.write(addrOffset, len);
-  for (int i = 0; i < len; i++)
-  {
-    EEPROM.write(addrOffset + 1 + i, strToWrite[i]);
-  }
+void writeSsidAndPasswordToFile() {
+  // Open or create the file
+  File file = SPIFFS.open("/config.txt", FILE_WRITE);
+  
+  // Write the data to the file
+  file.println("ssid=" + ssidWiFi);
+  file.println("password=" + passwordWiFi);
+  
+  // Close the file
+  file.close();
 }
 
-String readStringFromEEPROM(int addrOffset)
-{
-  int newStrLen = EEPROM.read(addrOffset);
-  char data[newStrLen + 1];
-  for (int i = 0; i < newStrLen; i++)
-  {
-    data[i] = EEPROM.read(addrOffset + 1 + i);
+void readSsidAndPasswordFromFile() {
+  // Open the file
+  File file = SPIFFS.open("/config.txt", FILE_READ);
+  
+  // Check if the file is open
+  if (!file) {
+    Serial.println("Failed to open config file");
+    return;
   }
-  data[newStrLen] = '\0';
-  return String(data);
+  
+  // Read the data from the file
+  while (file.available()) {
+    String line = file.readStringUntil('\n');
+    if (line.startsWith("ssid=")) {
+      ssidWiFi = line.substring(5);
+    } else if (line.startsWith("password=")) {
+      passwordWiFi = line.substring(9);
+    }
+  }
+  
+  // Close the file
+  file.close();
 }
 
 void getSsidAndPasswordAndUserID(String header) {
