@@ -9,6 +9,7 @@ extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 }
+#include <EEPROM.h>
 
 #define THING_NAME "esp32"
 #define AWS_HOST "a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com"
@@ -160,17 +161,42 @@ void setup() {
   // Display unique code
   Serial.print("Your ESP Board MAC Address is:  ");
   Serial.println(WiFi.macAddress());
+
+  // check if ssid and password are saved in flash and if can connect with them
+  ssidWiFi = readStringFromEEPROM(0);
+  Serial.println("SSID from memory: " + ssidWiFi);
+  if(ssidWiFi != "") {
+    passwordWiFi = readStringFromEEPROM(ssidWiFi.length()+1);
+    Serial.println("PASSWORD from memory: " + passwordWiFi);
+    if (passwordWiFi == "")
+      WiFi.begin(ssidWiFi.c_str());
+    else {
+      WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
+    }
+    int r = 0;  //retry counter
+    while (WiFi.status() != WL_CONNECTED && r < 10) {
+      delay(500);
+      Serial.print(".");
+      r++;
+    }
+
+    if (r == 10) {
+      Serial.println("Could not connect to previous WiFi: SSID: " + ssidWiFi + " PASSWORD: " + passwordWiFi);
+      // try connecting Access Point
+      connectToWiFiUsingAP();
+    } else {
+      Serial.println("WiFi connected, IP address: ");
+      WiFi.mode(WIFI_STA); 
+    }
+  }  
+
+  // AWS
+  connectAWS();
 }
 // ===================================================== SETUP END =====================================================
 
 // ===================================================== LOOP BEGIN =====================================================
 void loop() {
-  // Connect to WiFi
-  connectToWiFiUsingAP();
-
-  // AWS
-  connectAWS();
-
   // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
@@ -214,6 +240,7 @@ void responseToGET(WiFiClient client) {
   client.println("Connection: close");
   client.println();
 }
+
 void responseToPOST(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
@@ -239,13 +266,38 @@ void responseToPOST(WiFiClient client) {
 
   if (r == 10) {
     Serial.println("Connection failed");
-
     ESP.restart();
   } else {
     Serial.println("WiFi connected, IP address: ");
     WiFi.mode(WIFI_STA);
+    // save ssid and password to flash memeory
+    writeStringToEEPROM(0, ssidWiFi);
+    writeStringToEEPROM(ssidWifi.length()+1, passwordWiFi)    
   }
 }
+
+void writeStringToEEPROM(int addrOffset, const String &strToWrite)
+{
+  byte len = strToWrite.length();
+  EEPROM.write(addrOffset, len);
+  for (int i = 0; i < len; i++)
+  {
+    EEPROM.write(addrOffset + 1 + i, strToWrite[i]);
+  }
+}
+
+String readStringFromEEPROM(int addrOffset)
+{
+  int newStrLen = EEPROM.read(addrOffset);
+  char data[newStrLen + 1];
+  for (int i = 0; i < newStrLen; i++)
+  {
+    data[i] = EEPROM.read(addrOffset + 1 + i);
+  }
+  data[newStrLen] = '\0';
+  return String(data);
+}
+
 void getSsidAndPasswordAndUserID(String header) {
   header += '\n';
   int last_nl = header.lastIndexOf('\n');
@@ -253,7 +305,6 @@ void getSsidAndPasswordAndUserID(String header) {
   String payload = header.substring(last_but1_nl + 1, last_nl);
   int appersantidx1 = payload.indexOf('&');
   int appersantidx2 = payload.lastIndexOf('&');
-  // TODO: read 'user_id' and assign it to userId
   String uidPart = payload.substring(0, appersantidx1);
   int eqidx = uidPart.indexOf('=');
   userId = uidPart.substring(eqidx + 1);
@@ -341,8 +392,8 @@ void connectAWS() {
       delay(1000);
     }
     Serial.println(" connected");
+    pubSubClient.subscribe((userId + "/commands").c_str());
+    pubSubClient.loop();
   }
-  pubSubClient.subscribe((userId + "/commands").c_str());
-  pubSubClient.loop();
 }
 // ===================================================== AWS END =====================================================
