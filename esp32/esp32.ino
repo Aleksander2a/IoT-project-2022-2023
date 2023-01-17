@@ -6,8 +6,8 @@
 #include <cstring>
 #include <Adafruit_BME280.h>
 extern "C" {
-  #include "freertos/FreeRTOS.h"
-  #include "freertos/timers.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/timers.h"
 }
 
 #define THING_NAME "esp32"
@@ -17,12 +17,12 @@ WiFiClient wifiClient;
 WiFiClientSecure net;
 
 Adafruit_BME280 bme;
-float h,T,p;
+float h, T, p;
 
-const char* ssidAP     = "ESP32-Access-Point";
+const char* ssidAP = "ESP32-Access-Point";
 const char* passwordAP = "IOTagh-2022";
 
-String ssidWiFi     = "";
+String ssidWiFi = "";
 String passwordWiFi = "";
 
 String userId = "";
@@ -113,8 +113,9 @@ void msgReceived(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message received on ");
   Serial.print(topic);
   Serial.print(": ");
+
   char message[length];
-  for (int i=0; i<length; i++) {
+  for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
     message[i] = (char)payload[i];
   }
@@ -124,12 +125,15 @@ void msgReceived(char* topic, byte* payload, unsigned int length) {
   StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, message);
   const char* command = doc["Command"];
+
   // Execute command in message
-  Serial.print("Command to exetute is: "); Serial.println(command);
-  if (strcmp(command, "Stop")==0) {
+  Serial.print("Command to exetute is: ");
+  Serial.println(command);
+
+  if (strcmp(command, "Stop") == 0) {
     Serial.println("Stopping the publishing of messages");
     stopPublishing = true;
-  } else if(strcmp(command, "Resume")==0) {
+  } else if (strcmp(command, "Resume") == 0) {
     Serial.println("Resuming the publishing of messages");
     stopPublishing = false;
   }
@@ -142,8 +146,7 @@ void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_AP);
   makeAccessPoint();
-  if(!bme.begin(0x76))
-  {
+  if (!bme.begin(0x76)) {
     Serial.print("Can't detect sensor !!!");
     delay(10000);
   }
@@ -161,18 +164,17 @@ void setup() {
 // ===================================================== SETUP END =====================================================
 
 // ===================================================== LOOP BEGIN =====================================================
-void loop(){
+void loop() {
   // Connect to WiFi
   connectToWiFiUsingAP();
-  if(WiFi.status() != WL_CONNECTED)return;
 
   // AWS
   connectAWS();
-  
+
   // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
-  p = bme.readPressure() / 100.0F; // result in hPa
+  p = bme.readPressure() / 100.0F;  // result in hPa
 
   if (isnan(h) || isnan(T) || isnan(p)) {  // Check if any reads failed and exit early (to try again)
     Serial.println(F("Failed to read from BME sensor!"));
@@ -182,9 +184,10 @@ void loop(){
   // AWS publish message
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
-  if(stopPublishing==false) {
+  if (stopPublishing == false) {
     boolean rc = pubSubClient.publish((userId + "/sensorData").c_str(), sensorData);
-    Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
+    Serial.print("Message published, rc=");
+    Serial.print((rc ? "OK: " : "FAILED: "));
   }
   Serial.println(userId + "/sensorData");
   Serial.println(sensorData);
@@ -194,23 +197,24 @@ void loop(){
 // ===================================================== LOOP END =====================================================
 
 // ===================================================== ACCESS POINT BEGIN =====================================================
-void makeAccessPoint(){
+void makeAccessPoint() {
   Serial.println("Setting AP (Access Point)...");
   WiFi.softAP(ssidAP, passwordAP);
 
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
-  
+
   server.begin();
 }
-void responseToGET(WiFiClient client){
+
+void responseToGET(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
 }
-void responseToPOST(WiFiClient client){
+void responseToPOST(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println("Connection: close");
@@ -218,90 +222,100 @@ void responseToPOST(WiFiClient client){
 
   WiFi.mode(WIFI_AP_STA);
   getSsidAndPasswordAndUserID(header);
-  Serial.print(" Connecting to "); Serial.print(ssidWiFi);
-  if(passwordWiFi=="")WiFi.begin(ssidWiFi.c_str());
-  else WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
-  int r=0; //retry counter
-  while (WiFi.status() != WL_CONNECTED && r<10) {
+  Serial.print(" Connecting to ");
+  Serial.print(ssidWiFi);
+
+  if (passwordWiFi == "")
+    WiFi.begin(ssidWiFi.c_str());
+  else
+    WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
+
+  int r = 0;  //retry counter
+  while (WiFi.status() != WL_CONNECTED && r < 10) {
     delay(500);
     Serial.print(".");
     r++;
-    }
-    if(r==10){
-      Serial.println("Connection failed");;
-      ESP.restart();
-    }  
-    else{
-      Serial.println("WiFi connected, IP address: ");
-      WiFi.mode(WIFI_STA);
-    }
+  }
+
+  if (r == 10) {
+    Serial.println("Connection failed");
+
+    ESP.restart();
+  } else {
+    Serial.println("WiFi connected, IP address: ");
+    WiFi.mode(WIFI_STA);
+  }
 }
-void getSsidAndPasswordAndUserID(String header){
-  header+='\n';
+void getSsidAndPasswordAndUserID(String header) {
+  header += '\n';
   int last_nl = header.lastIndexOf('\n');
-  int last_but1_nl=header.substring(0, last_nl).lastIndexOf('\n');
-  String payload = header.substring(last_but1_nl+1, last_nl);
+  int last_but1_nl = header.substring(0, last_nl).lastIndexOf('\n');
+  String payload = header.substring(last_but1_nl + 1, last_nl);
   int appersantidx1 = payload.indexOf('&');
   int appersantidx2 = payload.lastIndexOf('&');
   // TODO: read 'user_id' and assign it to userId
-  String uidPart = payload.substring(0,appersantidx1);
+  String uidPart = payload.substring(0, appersantidx1);
   int eqidx = uidPart.indexOf('=');
-  userId = uidPart.substring(eqidx+1);
-  String ssidPart = payload.substring(appersantidx1+1,appersantidx2);
+  userId = uidPart.substring(eqidx + 1);
+  String ssidPart = payload.substring(appersantidx1 + 1, appersantidx2);
   eqidx = ssidPart.indexOf('=');
-  ssidWiFi = ssidPart.substring(eqidx+1);
-  String pwdPart = payload.substring(appersantidx2+1);
+  ssidWiFi = ssidPart.substring(eqidx + 1);
+  String pwdPart = payload.substring(appersantidx2 + 1);
   eqidx = pwdPart.indexOf('=');
-  passwordWiFi = pwdPart.substring(eqidx+1); 
-  Serial.println("UID: "+userId);
-  Serial.println("SSID: "+ssidWiFi);
-  Serial.println("PWD: "+passwordWiFi);
+  passwordWiFi = pwdPart.substring(eqidx + 1);
+  Serial.println("UID: " + userId);
+  Serial.println("SSID: " + ssidWiFi);
+  Serial.println("PWD: " + passwordWiFi);
 }
-int getContentLength(String header){
+int getContentLength(String header) {
   String cl_str = "content-length: ";
-  int cl_index=header.indexOf(cl_str);
+  int cl_index = header.indexOf(cl_str);
   char cl_first_digit = header[cl_index + cl_str.length()];
-  String cl_number_str="";
-  cl_number_str+=cl_first_digit;
-  while(header[++cl_index + cl_str.length()]!='\n')cl_number_str+=header[cl_index + cl_str.length()];
+  String cl_number_str = "";
+  cl_number_str += cl_first_digit;
+
+  while (header[++cl_index + cl_str.length()] != '\n') {
+    cl_number_str += header[cl_index + cl_str.length()];
+  }
+
   return cl_number_str.toInt();
 }
-void connectToWiFiUsingAP(){
+
+void connectToWiFiUsingAP() {
   WiFiClient client = server.available();
 
-  if (client) {                             
-    Serial.println("New Client.");          
-    String currentLine = "";               
-    int POSTcont_len=0;
+  if (client) {
+    Serial.println("New Client.");
+    String currentLine = "";
+    int POSTcont_len = 0;
     bool POSTpayload = false;
-    while (client.connected()) {          
-      if (client.available()) {         
-        char c = client.read();            
-        Serial.write(c);                
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        Serial.write(c);
         header += c;
-        if(POSTcont_len!=0)POSTcont_len--;
-        if (c == '\n' && header[0]=='G'){
+        if (POSTcont_len != 0)
+          POSTcont_len--;
+
+        if (c == '\n' && header[0] == 'G') {
           if (currentLine.length() == 0) {
             responseToGET(client);
             break;
           } else {
             currentLine = "";
-          }          
-        }
-        else if (c == '\n' && header[0]=='P' && !POSTpayload) {
+          }
+        } else if (c == '\n' && header[0] == 'P' && !POSTpayload) {
           if (currentLine.length() == 0) {
             POSTpayload = true;
             POSTcont_len = getContentLength(header);
-            
+
           } else {
             currentLine = "";
           }
-        }
-        else if (POSTcont_len==0 && header[0]=='P' && POSTpayload) {
+        } else if (POSTcont_len == 0 && header[0] == 'P' && POSTpayload) {
           responseToPOST(client);
           break;
-        } 
-        else if (c != '\r') {
+        } else if (c != '\r') {
           currentLine += c;
         }
       }
@@ -319,7 +333,8 @@ void connectToWiFiUsingAP(){
 // ===================================================== AWS BEGIN =====================================================
 void connectAWS() {
   if (!pubSubClient.connected()) {
-    Serial.print("PubSubClient connecting to: "); Serial.print(AWS_HOST);
+    Serial.print("PubSubClient connecting to: ");
+    Serial.print(AWS_HOST);
     while (!pubSubClient.connected()) {
       Serial.print(".");
       pubSubClient.connect(THING_NAME);
