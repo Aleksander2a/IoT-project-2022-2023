@@ -112,21 +112,21 @@ class _WifiConnectState extends State<WifiConnectPage>{
     String ssid = "ESP32-Access-Point";
     String password = "IOTagh-2022";
     var isConnectedToAP = await AndroidFlutterWifi.connectToNetwork(ssid, password);
-    if(!isConnectedToAP)_showNotConnectedDialog();
+    if(!isConnectedToAP)_showNotConnectedDialog(widget.isRegistering);
     return isConnectedToAP;
   }
-  Future<void> _showNotConnectedDialog() async {
+  Future<void> _showNotConnectedDialog(bool isRegistering) async {
     EasyLoading.dismiss();
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Nie połączono z urządzeniem'),
+          title: const Text('Nie połączono z urządzeniem.'),
           content: SingleChildScrollView(
             child: ListBody(
-              children: const <Widget>[
-                Text('Upewnij się, że urządzenie jest włączone!'),
+              children: <Widget>[
+                Text(isRegistering?"Sprawdź, czy urządzenie jest włączone. Zaloguj się i w zakładce Konto naciśnij Podłącz Płytkę":"Sprawdź, czy urządzenie jest włączone. W zakładce Konto naciśnij Podłącz Płytkę.")
               ],
             ),
           ),
@@ -196,6 +196,33 @@ class _WifiConnectState extends State<WifiConnectPage>{
       },
     );
   }
+  Future<void> _showTurnOnWiFi() async {
+    EasyLoading.dismiss();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Brak WiFi'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Upewnij się że masz właczone Wifi'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
   void _sendWiFiCredentials() {
     http.post(
       Uri.parse('http://192.168.4.1'),
@@ -222,11 +249,16 @@ class _WifiConnectState extends State<WifiConnectPage>{
       ..userInteractions = false
       ..dismissOnTap = false;
     EasyLoading.show(status: 'ładowanie...');
-    if(!await _connectToAP())return;
     if(_ssid==""){_showEmptySSIDDialog();return;}
+    if(!await _connectToAP())return;
     _sendWiFiCredentials();
     if(!await _isESPConnectedToWiFi())return;
-    //await Future.delayed(Duration(seconds: 20));
+    var isconnectedToWifi=await AndroidFlutterWifi.isConnected();
+    while(!isconnectedToWifi){
+      await _showTurnOnWiFi();
+      await Future.delayed(Duration(seconds: 4));
+      isconnectedToWifi=await AndroidFlutterWifi.isConnected();
+    }
     EasyLoading.dismiss();
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => HomePage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile)));
