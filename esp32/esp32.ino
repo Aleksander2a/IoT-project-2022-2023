@@ -25,6 +25,8 @@ const char* passwordAP = "IOTagh-2022";
 String ssidWiFi     = "";
 String passwordWiFi = "";
 
+String userId = "";
+
 WiFiServer server(80);
 
 String header;
@@ -181,9 +183,10 @@ void loop(){
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
   if(stopPublishing==false) {
-    boolean rc = pubSubClient.publish((WiFi.macAddress()+"/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((userId + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc="); Serial.print( (rc ? "OK: " : "FAILED: ") );
   }
+  Serial.println(userId + "/sensorData");
   Serial.println(sensorData);
 
   delay(1000);
@@ -206,8 +209,6 @@ void responseToGET(WiFiClient client){
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println(WiFi.macAddress());
-  client.println();
 }
 void responseToPOST(WiFiClient client){
   client.println("HTTP/1.1 200 OK");
@@ -216,7 +217,7 @@ void responseToPOST(WiFiClient client){
   client.println();
 
   WiFi.mode(WIFI_AP_STA);
-  getSsidAndPassword(header);
+  getSsidAndPasswordAndUserID(header);
   Serial.print(" Connecting to "); Serial.print(ssidWiFi);
   if(passwordWiFi=="")WiFi.begin(ssidWiFi.c_str());
   else WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
@@ -235,18 +236,26 @@ void responseToPOST(WiFiClient client){
       WiFi.mode(WIFI_STA);
     }
 }
-void getSsidAndPassword(String header){
+void getSsidAndPasswordAndUserID(String header){
   header+='\n';
   int last_nl = header.lastIndexOf('\n');
   int last_but1_nl=header.substring(0, last_nl).lastIndexOf('\n');
   String payload = header.substring(last_but1_nl+1, last_nl);
-  int appersantidx = payload.indexOf('&');
-  String ssidPart = payload.substring(0,appersantidx);
-  int eqidx = ssidPart.indexOf('=');
+  int appersantidx1 = payload.indexOf('&');
+  int appersantidx2 = payload.lastIndexOf('&');
+  // TODO: read 'user_id' and assign it to userId
+  String uidPart = payload.substring(0,appersantidx1);
+  int eqidx = uidPart.indexOf('=');
+  userId = uidPart.substring(eqidx+1);
+  String ssidPart = payload.substring(appersantidx1+1,appersantidx2);
+  eqidx = ssidPart.indexOf('=');
   ssidWiFi = ssidPart.substring(eqidx+1);
-  String pwdPart = payload.substring(appersantidx+1);
+  String pwdPart = payload.substring(appersantidx2+1);
   eqidx = pwdPart.indexOf('=');
   passwordWiFi = pwdPart.substring(eqidx+1); 
+  Serial.println("UID: "+userId);
+  Serial.println("SSID: "+ssidWiFi);
+  Serial.println("PWD: "+passwordWiFi);
 }
 int getContentLength(String header){
   String cl_str = "content-length: ";
@@ -318,7 +327,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
   }
-  pubSubClient.subscribe((WiFi.macAddress()+"/commands").c_str());
+  pubSubClient.subscribe((userId + "/commands").c_str());
   pubSubClient.loop();
 }
 // ===================================================== AWS END =====================================================
