@@ -342,7 +342,7 @@ int getContentLength(String header) {
 void connectToWiFiUsingAP() {
   WiFiClient client = server.available();
 
-  while(WiFi.status() != WL_CONNECTED) {
+  while(true) {
     if (client) {
     Serial.println("New Client.");
     String currentLine = "";
@@ -373,9 +373,11 @@ void connectToWiFiUsingAP() {
           }
         } else if (POSTcont_len == 0 && header[0] == 'P' && POSTpayload) {
           bool connectedSuccessfully = responseToPOST(client);
-          if(!connectedSuccessfully) {
+          if(connectedSuccessfully) {
+            return;
+          } else {
             ESP.restart();
-          }          
+          }
           break;
         } else if (c != '\r') {
           currentLine += c;
