@@ -247,7 +247,7 @@ void responseToGET(WiFiClient client) {
   client.println();
 }
 
-void responseToPOST(WiFiClient client) {
+bool responseToPOST(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println("Connection: close");
@@ -272,13 +272,14 @@ void responseToPOST(WiFiClient client) {
 
   if (r == 10) {
     Serial.println("Connection failed");
-    ESP.restart();
+    return false;
   } else {
     Serial.println("WiFi connected, IP address: ");
     WiFi.mode(WIFI_STA);
     // save ssid and password to flash memeory
     writeStringToEEPROM(0, ssidWiFi);
     writeStringToEEPROM(ssidWiFi.length()+1, passwordWiFi); 
+    return true;
   }
 }
 
@@ -341,7 +342,8 @@ int getContentLength(String header) {
 void connectToWiFiUsingAP() {
   WiFiClient client = server.available();
 
-  if (client) {
+  while(WiFi.status() != WL_CONNECTED) {
+    if (client) {
     Serial.println("New Client.");
     String currentLine = "";
     int POSTcont_len = 0;
@@ -370,7 +372,10 @@ void connectToWiFiUsingAP() {
             currentLine = "";
           }
         } else if (POSTcont_len == 0 && header[0] == 'P' && POSTpayload) {
-          responseToPOST(client);
+          bool connectedSuccessfully = responseToPOST(client);
+          if(!connectedSuccessfully) {
+            ESP.restart();
+          }          
           break;
         } else if (c != '\r') {
           currentLine += c;
@@ -383,6 +388,7 @@ void connectToWiFiUsingAP() {
     client.stop();
     Serial.println("Client disconnected.");
     Serial.println("");
+    }
   }
 }
 // ===================================================== ACCESS POINT END =====================================================
