@@ -145,8 +145,6 @@ PubSubClient pubSubClient(AWS_HOST, 8883, msgReceived, net);
 // ===================================================== SETUP BEGIN =====================================================
 void setup() {
   Serial.begin(115200);
-  WiFi.mode(WIFI_AP);
-  makeAccessPoint();
   if (!bme.begin(0x76)) {
     Serial.print("Can't detect sensor !!!");
     delay(10000);
@@ -168,8 +166,9 @@ void setup() {
   if(ssidWiFi != "") {
     passwordWiFi = readStringFromEEPROM(ssidWiFi.length()+1);
     Serial.println("PASSWORD from memory: " + passwordWiFi);
-    if (passwordWiFi == "")
+    if (passwordWiFi == "") {
       WiFi.begin(ssidWiFi.c_str());
+    }
     else {
       WiFi.begin(ssidWiFi.c_str(), passwordWiFi.c_str());
     }
@@ -183,12 +182,19 @@ void setup() {
     if (r == 10) {
       Serial.println("Could not connect to previous WiFi: SSID: " + ssidWiFi + " PASSWORD: " + passwordWiFi);
       // try connecting Access Point
+      WiFi.mode(WIFI_AP);
+      makeAccessPoint();
       connectToWiFiUsingAP();
     } else {
       Serial.println("WiFi connected, IP address: ");
       WiFi.mode(WIFI_STA); 
     }
-  }  
+  } else {
+    // try connecting Access Point
+    WiFi.mode(WIFI_AP);
+    makeAccessPoint();
+    connectToWiFiUsingAP();
+  }
 
   // AWS
   connectAWS();
