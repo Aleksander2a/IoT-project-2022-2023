@@ -48,8 +48,8 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
   void init() async {
     await AndroidFlutterWifi.init();
-    await AndroidFlutterWifi.disableWifi();
-    await AndroidFlutterWifi.enableWifi();
+    // await AndroidFlutterWifi.disableWifi();
+    // await AndroidFlutterWifi.enableWifi();
   }
 
 
@@ -250,6 +250,8 @@ class _WifiConnectState extends State<WifiConnectPage>{
       ..dismissOnTap = false;
     EasyLoading.show(status: 'ładowanie...');
     if(_ssid==""){_showEmptySSIDDialog();return;}
+    await AndroidFlutterWifi.disableWifi();
+    await AndroidFlutterWifi.enableWifi();
     if(!await _connectToAP())return;
     _sendWiFiCredentials();
     if(!await _isESPConnectedToWiFi())return;

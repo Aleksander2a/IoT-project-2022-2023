@@ -128,9 +128,12 @@ class _AccountState extends State<Account> {
   Future<bool> _userExists() async {
     // get the current text field contents
     try {
-      List<Users> users = await Amplify.DataStore.query(Users.classType);
-      for (Users user in users) {
-        if (user.username == _username && user.id != widget.user.id) {
+      List<Users> users = await Amplify.DataStore.query(
+          Users.classType,
+          where: Users.USERNAME.eq(_username)
+      );
+       if(users.isNotEmpty) {
+        if (users[0].username == _username && users[0].id != widget.user.id) {
           return true;
         }
       }

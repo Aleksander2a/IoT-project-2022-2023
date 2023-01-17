@@ -61,6 +61,7 @@ class _MeasuresState extends State<Measures>
         SensorData.classType,
         where: SensorData.USERSID.eq(widget.user.id),
         sortBy: [SensorData.CREATION_TIME.descending()],
+        pagination: const QueryPagination(limit: 1),
       );
       if (sensorData.isNotEmpty) {
         tempController.text = sensorData[0].temperature.toString();

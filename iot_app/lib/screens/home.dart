@@ -75,19 +75,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Future<void> _fetchUserProfilesNames() async {
-    // get the current text field contents
-    try {
-      print('Fetching user profiles...');
-      widget.userProfiles = await Amplify.DataStore.query(
-        Profiles.classType,
-        where: Profiles.USERSID.eq(widget.user.id),
-      );
-    } catch (e) {
-      print("Could not query DataStore: " + e.toString());
-      return;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
