@@ -31,25 +31,26 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _getUser() async {
     try {
-      List<Users> users = await Amplify.DataStore.query(Users.classType);
-      for (Users user in users) {
-        if (user.username == _username && sha1.convert(utf8.encode(_password)).toString() == user.password) {
+      List<Users> users = await Amplify.DataStore.query(
+          Users.classType,
+          where: Users.USERNAME.eq(_username)
+      );
+        if (users.isNotEmpty && users[0].username == _username && sha1.convert(utf8.encode(_password)).toString() == users[0].password) {
           List<Profiles> userProfiles = await Amplify.DataStore.query(
             Profiles.classType,
-            where: Profiles.USERSID.eq(user.id),
+            where: Profiles.USERSID.eq(users[0].id),
           );
           List<Profiles> activeProfileList = await Amplify.DataStore.query(
             Profiles.classType,
-            where: Profiles.USERSID.eq(user.id).and(Profiles.ID.eq(user.active_profile_id)),
+            where: Profiles.USERSID.eq(users[0].id).and(Profiles.ID.eq(users[0].active_profile_id)),
           );
           Profiles activeProfile = activeProfileList[0];
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HomePage(user: user, userProfiles: userProfiles, activeProfile: activeProfile)),
+            MaterialPageRoute(builder: (context) => HomePage(user: users[0], userProfiles: userProfiles, activeProfile: activeProfile)),
           );
           return;
         }
-      }
       print("Wrong username or password");
       // Display scaffold message
       ScaffoldMessenger.of(context).showSnackBar(

@@ -33,11 +33,12 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<bool> _userExists() async {
     // get the current text field contents
     try {
-      List<Users> users = await Amplify.DataStore.query(Users.classType);
-      for (Users user in users) {
-        if (user.username == _username) {
-          return true;
-        }
+      List<Users> users = await Amplify.DataStore.query(
+          Users.classType,
+          where: Users.USERNAME.eq(_username)
+      );
+      if (users.isNotEmpty) {
+        return true;
       }
       return false;
     } catch (e) {

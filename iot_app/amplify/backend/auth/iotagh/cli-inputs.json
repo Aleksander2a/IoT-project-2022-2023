@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "cognitoConfig": {
+    "identityPoolName": "iotagh_identitypool_82d2d557",
+    "allowUnauthenticatedIdentities": true,
+    "authSelections": "identityPoolOnly",
+    "resourceName": "iotagh",
+    "sharedId": "82d2d557",
+    "serviceName": "Cognito",
+    "useDefault": "manual"
+  }
+}
