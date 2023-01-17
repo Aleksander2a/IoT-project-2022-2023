@@ -272,7 +272,7 @@ void responseToPOST(WiFiClient client) {
     WiFi.mode(WIFI_STA);
     // save ssid and password to flash memeory
     writeStringToEEPROM(0, ssidWiFi);
-    writeStringToEEPROM(ssidWifi.length()+1, passwordWiFi)    
+    writeStringToEEPROM(ssidWiFi.length()+1, passwordWiFi); 
   }
 }
 
