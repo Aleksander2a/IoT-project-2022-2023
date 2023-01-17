@@ -151,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => WifiConnectPage(true)));
+            context, MaterialPageRoute(builder: (context) => SignUpPage()));
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 20),
@@ -206,31 +206,31 @@ class _LoginPageState extends State<LoginPage> {
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
         body: Container(
-      height: height,
-      child: Stack(
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(height: height * .2),
-                  _title(),
-                  SizedBox(height: 50),
-                  _emailPasswordWidget(),
-                  SizedBox(height: 20),
-                  _submitButton(),
-                  SizedBox(height: height * .055),
-                  _createAccountLabel(),
-                ],
+          height: height,
+          child: Stack(
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(height: height * .2),
+                      _title(),
+                      SizedBox(height: 50),
+                      _emailPasswordWidget(),
+                      SizedBox(height: 20),
+                      _submitButton(),
+                      SizedBox(height: height * .055),
+                      _createAccountLabel(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              Positioned(top: 40, left: 0, child: _backButton()),
+            ],
           ),
-          Positioned(top: 40, left: 0, child: _backButton()),
-        ],
-      ),
-    ));
+        ));
   }
 }

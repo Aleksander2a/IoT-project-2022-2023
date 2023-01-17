@@ -26,6 +26,5 @@ type Users @model @auth(rules: [{allow: public}]) {
   active_profile_id: ID
   UserProfiles: [Profiles] @hasMany(indexName: "byUsers", fields: ["id"])
   UserSensorData: [SensorData] @hasMany(indexName: "byUsers", fields: ["id"])
-  device_id: String!
 }
  

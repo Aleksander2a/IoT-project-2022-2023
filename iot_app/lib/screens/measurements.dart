@@ -146,8 +146,8 @@ class _MeasuresState extends State<Measures>
     }
 
     subscription = client.updates?.listen(_onMessage) as StreamSubscription;
-
-    String topic = '${widget.user.device_id}/sensorData';
+    print('${widget.user.id}/sensorData');
+    String topic = '${widget.user.id}/sensorData';
     client.subscribe(topic, MqttQos.atMostOnce);
 
     return true;
@@ -233,14 +233,14 @@ class _MeasuresState extends State<Measures>
                 controller: title == 'Temperatura'
                     ? tempController
                     : title == 'Wilgotność'
-                        ? humController
-                        : presController,
+                    ? humController
+                    : presController,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w600,
                     color: Colors.blue[900]),
-            ),
+              ),
               // child: Text("placeholder",
               //     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ),
@@ -272,12 +272,12 @@ class _MeasuresState extends State<Measures>
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(
@@ -307,21 +307,21 @@ class _MeasuresState extends State<Measures>
 
   Widget _functionButtons() {
     return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children:<Widget>[
-          Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children:<Widget>[
+        Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               _button("Zatrzymaj"),
-              ]
+            ]
         ),
-          Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _button("Wznów"),
-              ]
-          ),
-        ],);
+        Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _button("Wznów"),
+            ]
+        ),
+      ],);
   }
 
   @override
@@ -362,54 +362,54 @@ class _MeasuresState extends State<Measures>
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
         body: Container(
-      height: height,
-      child: Stack(
-        children: <Widget>[
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(height: 50),
-                  _activeProfileInfo(),
-                  SizedBox(height: 20),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              SizedBox(height: 20),
-                              Text(
-                                "Temperatura",
-                                style: TextStyle(fontSize: 15),
-                              ),
-                              SizedBox(height: 50),
-                              Text(
-                                "Wilgotność",
-                                style: TextStyle(fontSize: 15),
-                              ),
-                              SizedBox(height: 50),
-                              Text(
-                                "Ciśnienie",
-                                style: TextStyle(fontSize: 15),
-                              ),
-                            ]),
-                        _entryColumn("MIN", "minTemp", "minHum", "minPres"),
-                        _entryColumn("MAX", "maxTemp", "maxHum", "maxPres"),
-                      ]),
-                  SizedBox(height: 50),
-                  _data(),
-                  SizedBox(height: 50),
-                  _functionButtons(),
-                ],
+          height: height,
+          child: Stack(
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(height: 50),
+                      _activeProfileInfo(),
+                      SizedBox(height: 20),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  SizedBox(height: 20),
+                                  Text(
+                                    "Temperatura",
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                  SizedBox(height: 50),
+                                  Text(
+                                    "Wilgotność",
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                  SizedBox(height: 50),
+                                  Text(
+                                    "Ciśnienie",
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                ]),
+                            _entryColumn("MIN", "minTemp", "minHum", "minPres"),
+                            _entryColumn("MAX", "maxTemp", "maxHum", "maxPres"),
+                          ]),
+                      SizedBox(height: 50),
+                      _data(),
+                      SizedBox(height: 50),
+                      _functionButtons(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 }

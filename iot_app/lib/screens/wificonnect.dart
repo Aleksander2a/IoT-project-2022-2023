@@ -24,22 +24,22 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:restart_app/restart_app.dart';
 
 class WifiConnectPage extends StatefulWidget {
-  WifiConnectPage(this.isRegistering, {Key? key}) : super(key: key);
+  WifiConnectPage({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.isRegistering}) : super(key: key);
 
   String? title;
+  Users user;
+  List<Profiles> userProfiles;
+  Profiles activeProfile;
   bool isRegistering;
 
   @override
-  _WifiConnectState createState() => _WifiConnectState(isRegistering);
+  _WifiConnectState createState() => _WifiConnectState();
 }
 
 class _WifiConnectState extends State<WifiConnectPage>{
-  _WifiConnectState(bool isReg){
-    _isRegistering=isReg;
-  }
+
   String _ssid = '';
   String _password = '';
-  bool _isRegistering = false;
 
   @override
   void initState() {
@@ -196,18 +196,16 @@ class _WifiConnectState extends State<WifiConnectPage>{
       },
     );
   }
-  Future<http.Response> _sendWiFiCredentials() async {
-    var response= await http.get(
-        Uri.parse('http://192.168.4.1')
-    );
+  void _sendWiFiCredentials() {
     http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
+        'user_id': widget.user.id,
         'ssid': _ssid,
         'pwd': _password
       },
     );
-    return response;
+    return;
   }
 
   Future<bool> _isESPConnectedToWiFi() async {
@@ -226,16 +224,12 @@ class _WifiConnectState extends State<WifiConnectPage>{
     EasyLoading.show(status: 'ładowanie...');
     if(!await _connectToAP())return;
     if(_ssid==""){_showEmptySSIDDialog();return;}
-    final response=await _sendWiFiCredentials();
+    _sendWiFiCredentials();
     if(!await _isESPConnectedToWiFi())return;
-    print("RESPONSE: ${response.body}");
-    if(_isRegistering){
-      EasyLoading.dismiss();
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => SignUpPage(response.body.trim())));
-    }
-    else
-      Restart.restartApp();
+    //await Future.delayed(Duration(seconds: 20));
+    EasyLoading.dismiss();
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => HomePage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile)));
   }
   Widget _submitButton() {
     return InkWell(
@@ -296,7 +290,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-              isRegistering?"Podaj dane:":"Zrestartuj urządzenie i podaj dane. Następnie zaloguj się ponownie.",
+              isRegistering?"Podaj dane:":"Zrestartuj urządzenie i podaj dane.",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
@@ -325,7 +319,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
                     SizedBox(height: height * .2),
                     _title(),
                     SizedBox(height: 20),
-                    _header(_isRegistering),
+                    _header(widget.isRegistering),
                     SizedBox(
                       height: 50,
                     ),
