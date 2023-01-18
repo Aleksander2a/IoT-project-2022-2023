@@ -149,6 +149,8 @@ PubSubClient pubSubClient(AWS_HOST, 8883, msgReceived, net);
 void setup() {
   Serial.begin(115200);
   SPIFFS.begin();
+  // Uncomment to delete config from flash
+  // SPIFFS.remove("/config.txt");
   if (!bme.begin(0x76)) {
     Serial.print("Can't detect sensor !!!");
     delay(10000);
@@ -191,24 +193,24 @@ void setup() {
       // try connecting Access Point
       WiFi.mode(WIFI_AP);
       makeAccessPoint();
+      while(WiFi.status() != WL_CONNECTED) connectToWiFiUsingAP();
+      connectAWS();
     } else {
-      Serial.println("WiFi connected, IP address: "); 
+      Serial.println("WiFi connected");
+      connectAWS(); 
     }
   } else {
     // try connecting Access Point
     WiFi.mode(WIFI_AP);
     makeAccessPoint();
+    while(WiFi.status() != WL_CONNECTED) connectToWiFiUsingAP();
+    connectAWS();
   }
 }
 // ===================================================== SETUP END =====================================================
 
 // ===================================================== LOOP BEGIN =====================================================
 void loop() {
-  connectToWiFiUsingAP();
-  if(WiFi.status() != WL_CONNECTED)
-    return;
-    // AWS
-  connectAWS();
   // Read sensor data
   h = bme.readHumidity();
   T = bme.readTemperature();
@@ -278,7 +280,6 @@ void responseToPOST(WiFiClient client) {
 
   if (r == 10) {
     Serial.println("Connection failed");
-    ESP.restart();
   } else {
     Serial.println("WiFi connected, IP address: ");
     WiFi.mode(WIFI_STA);
@@ -338,15 +339,22 @@ void getSsidAndPasswordAndUserID(String header) {
   String payload = header.substring(last_but1_nl + 1, last_nl);
   int appersantidx1 = payload.indexOf('&');
   int appersantidx2 = payload.lastIndexOf('&');
+  
+  // User ID
   String uidPart = payload.substring(0, appersantidx1);
   int eqidx = uidPart.indexOf('=');
   userId = uidPart.substring(eqidx + 1);
+
+  // SSID
   String ssidPart = payload.substring(appersantidx1 + 1, appersantidx2);
   eqidx = ssidPart.indexOf('=');
   ssidWiFi = ssidPart.substring(eqidx + 1);
+
+  // Password
   String pwdPart = payload.substring(appersantidx2 + 1);
   eqidx = pwdPart.indexOf('=');
   passwordWiFi = pwdPart.substring(eqidx + 1);
+
   Serial.println("\nUID: " + userId);
   Serial.println("SSID: " + ssidWiFi);
   Serial.println("PWD: " + passwordWiFi);
@@ -367,7 +375,6 @@ int getContentLength(String header) {
 
 void connectToWiFiUsingAP(){
   WiFiClient client = server.available();
-
   if (client) {                             
     Serial.println("New Client.");          
     String currentLine = "";               
@@ -426,6 +433,7 @@ void connectAWS() {
       delay(1000);
     }
     Serial.println(" connected");
+
     pubSubClient.subscribe((userId + "/commands").c_str());
     pubSubClient.loop();
   }
