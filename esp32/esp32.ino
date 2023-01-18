@@ -165,7 +165,7 @@ void setup() {
 
   // check if ssid and password are saved in file and if can connect with them
   Serial.println("Read WiFi data from file...");
-  readSsidAndPasswordFromFile();
+  readSsidAndPasswordAndUserIdFromFile();
   Serial.println("SSID from file: " + ssidWiFi);
   Serial.println("PASSWORD from file: " + passwordWiFi);
   if(ssidWiFi != "") {
@@ -281,24 +281,25 @@ bool responseToPOST(WiFiClient client) {
     WiFi.mode(WIFI_STA);
     // save ssid and password to file
     Serial.println("Saving WiFi data to file...");
-    writeSsidAndPasswordToFile();
+    writeSsidAndPasswordAndUserIdToFile();
     return true;
   }
 }
 
-void writeSsidAndPasswordToFile() {
+void writeSsidAndPasswordAndUserIdToFile() {
   // Open or create the file
   File file = SPIFFS.open("/config.txt", FILE_WRITE);
   
   // Write the data to the file
   file.println("ssid=" + ssidWiFi);
   file.println("password=" + passwordWiFi);
+  file.println("user=" + userId);
   
   // Close the file
   file.close();
 }
 
-void readSsidAndPasswordFromFile() {
+void readSsidAndPasswordAndUserIdFromFile() {
   // Open the file
   File file = SPIFFS.open("/config.txt", FILE_READ);
   
@@ -315,6 +316,8 @@ void readSsidAndPasswordFromFile() {
       ssidWiFi = line.substring(5);
     } else if (line.startsWith("password=")) {
       passwordWiFi = line.substring(9);
+    } else if (line.startsWith("user=")) {
+      userId = line.substring(5);
     }
   }
   
