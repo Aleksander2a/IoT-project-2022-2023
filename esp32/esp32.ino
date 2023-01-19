@@ -10,6 +10,11 @@ extern "C" {
 #include "freertos/timers.h"
 }
 
+#include "time.h"
+const char* ntpServer = "europe.pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
 #include <EEPROM.h>
 #include <FS.h>
 #include <SPIFFS.h>
@@ -206,6 +211,9 @@ void setup() {
     while(WiFi.status() != WL_CONNECTED) connectToWiFiUsingAP();
     connectAWS();
   }
+
+  // time
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 // ===================================================== SETUP END =====================================================
 
@@ -222,14 +230,15 @@ void loop() {
   }
 
   // AWS publish message
+  String time=getLocalTime();
   char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
+  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f, \"Time\": \"%s\"}", T, h, p, time.c_str());
   if (stopPublishing == false) {
     boolean rc = pubSubClient.publish((userId + "/" + WiFi.macAddress() + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/sensorData");
+  Serial.println(userId + "/" + WiFi.macAddress() + "/sensorData");
   Serial.println(sensorData);
 
   delay(1000);
@@ -362,7 +371,7 @@ void getSsidAndPasswordAndUserID(String header) {
   Serial.println("PWD: " + passwordWiFi);
 }
 int getContentLength(String header) {
-  String cl_str = "content-length: ";
+  String cl_str = "Content-Length: ";
   int cl_index = header.indexOf(cl_str);
   char cl_first_digit = header[cl_index + cl_str.length()];
   String cl_number_str = "";
@@ -441,3 +450,29 @@ void connectAWS() {
   }
 }
 // ===================================================== AWS END =====================================================
+// ===================================================== TIME BEGIN =====================================================
+String getLocalTime(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return "Failed to obtain time";
+  }
+  String day=String(timeinfo.tm_mday);
+  if(day.length()==1)
+    day="0"+day;
+  String month=String(timeinfo.tm_mon+1);
+  if(month.length()==1)
+    month="0"+month;
+  String hour=String(timeinfo.tm_hour);
+  if(hour.length()==1)
+    hour="0"+hour;
+  String min=String(timeinfo.tm_min);
+  if(min.length()==1)
+    min="0"+min;
+  String sec=String(timeinfo.tm_sec);  
+  if(sec.length()==1)
+    sec="0"+sec;
+  String date=String(1900 + timeinfo.tm_year) + "-" + month + "-" + day + " " +  hour+ ":" + min + ":" + sec;
+  return date;
+}
+// ===================================================== TIME END =====================================================
