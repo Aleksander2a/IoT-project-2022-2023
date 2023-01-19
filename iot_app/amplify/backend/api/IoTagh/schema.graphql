@@ -5,6 +5,7 @@ type SensorData @model @auth(rules: [{allow: public}]) {
   pressure: Float
   usersID: ID! @index(name: "byUsers")
   creation_time: AWSDateTime!
+  device_id: String!
 }
 
 type Profiles @model @auth(rules: [{allow: public}]) {
@@ -26,5 +27,6 @@ type Users @model @auth(rules: [{allow: public}]) {
   active_profile_id: ID
   UserProfiles: [Profiles] @hasMany(indexName: "byUsers", fields: ["id"])
   UserSensorData: [SensorData] @hasMany(indexName: "byUsers", fields: ["id"])
+  device_id: String
 }
  

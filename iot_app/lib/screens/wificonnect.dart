@@ -223,7 +223,10 @@ class _WifiConnectState extends State<WifiConnectPage>{
       },
     );
   }
-  void _sendWiFiCredentials() {
+  Future<http.Response> _sendWiFiCredentials() async {
+    var response = await http.get(
+        Uri.parse('http://192.168.4.1')
+    );
     http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
@@ -232,7 +235,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
         'pwd': _password
       },
     );
-    return;
+    return response;
   }
 
   Future<bool> _isESPConnectedToWiFi() async {
@@ -253,9 +256,20 @@ class _WifiConnectState extends State<WifiConnectPage>{
     await AndroidFlutterWifi.disableWifi();
     await AndroidFlutterWifi.enableWifi();
     if(!await _connectToAP())return;
-    _sendWiFiCredentials();
+    final response = await _sendWiFiCredentials();
+    print("RESPONSE: ${response.body}");
+    // set device_id in user from object
+    final updatedUser = widget.user.copyWith(
+        device_id: response.body.trim()
+    );
+    try {
+      // save the updated User to the DataStore
+      await Amplify.DataStore.save(updatedUser);
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
     if(!await _isESPConnectedToWiFi())return;
-    var isconnectedToWifi=await AndroidFlutterWifi.isConnected();
+    var isconnectedToWifi = await AndroidFlutterWifi.isConnected();
     while(!isconnectedToWifi){
       await _showTurnOnWiFi();
       await Future.delayed(Duration(seconds: 4));

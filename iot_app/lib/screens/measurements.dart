@@ -147,8 +147,8 @@ class _MeasuresState extends State<Measures>
     }
 
     subscription = client.updates?.listen(_onMessage) as StreamSubscription;
-    print('${widget.user.id}/sensorData');
-    String topic = '${widget.user.id}/sensorData';
+    print('${widget.user.id}/${widget.user.device_id}/sensorData');
+    String topic = '${widget.user.id}/${widget.user.device_id}/sensorData';
     client.subscribe(topic, MqttQos.atMostOnce);
 
     return true;
@@ -182,7 +182,8 @@ class _MeasuresState extends State<Measures>
         temperature: temperature,
         humidity: humidity,
         pressure: pressure,
-        creation_time: TemporalDateTime(DateTime.now())
+        creation_time: TemporalDateTime(DateTime.now()),
+        device_id: widget.user.device_id!
     );
     try {
       // save the new User to the DataStore
@@ -273,12 +274,12 @@ class _MeasuresState extends State<Measures>
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('${widget.user.id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('${widget.user.id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(

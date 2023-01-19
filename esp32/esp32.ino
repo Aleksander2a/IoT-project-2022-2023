@@ -225,7 +225,7 @@ void loop() {
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f}", T, h, p);
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((userId + "/" + WiFi.macAddress() + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
@@ -252,6 +252,8 @@ void responseToGET(WiFiClient client) {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
   client.println("Connection: close");
+  client.println();
+  client.println(WiFi.macAddress());
   client.println();
 }
 
@@ -434,7 +436,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
 
-    pubSubClient.subscribe((userId + "/commands").c_str());
+    pubSubClient.subscribe((userId + "/" + WiFi.macAddress() + "/commands").c_str());
     pubSubClient.loop();
   }
 }
