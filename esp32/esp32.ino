@@ -371,7 +371,7 @@ void getSsidAndPasswordAndUserID(String header) {
   Serial.println("PWD: " + passwordWiFi);
 }
 int getContentLength(String header) {
-  String cl_str = "Content-Length: ";
+  String cl_str = "content-length: ";
   int cl_index = header.indexOf(cl_str);
   char cl_first_digit = header[cl_index + cl_str.length()];
   String cl_number_str = "";
