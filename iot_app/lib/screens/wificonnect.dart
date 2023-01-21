@@ -48,8 +48,8 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
   void init() async {
     await AndroidFlutterWifi.init();
-    // await AndroidFlutterWifi.disableWifi();
-    // await AndroidFlutterWifi.enableWifi();
+    await AndroidFlutterWifi.disableWifi();
+    await AndroidFlutterWifi.enableWifi();
   }
 
 
@@ -253,8 +253,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
       ..dismissOnTap = false;
     EasyLoading.show(status: 'ładowanie...');
     if(_ssid==""){_showEmptySSIDDialog();return;}
-    await AndroidFlutterWifi.disableWifi();
-    await AndroidFlutterWifi.enableWifi();
     if(!await _connectToAP())return;
     final response = await _sendWiFiCredentials();
     print("RESPONSE: ${response.body}");
@@ -262,6 +260,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
     final updatedUser = widget.user.copyWith(
         device_id: response.body.trim()
     );
+    widget.user = updatedUser;
     try {
       // save the updated User to the DataStore
       await Amplify.DataStore.save(updatedUser);

@@ -20,6 +20,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
+import 'package:intl/intl.dart';
 
 
 
@@ -41,6 +42,8 @@ class _MeasuresState extends State<Measures>
   double temperature = 0;
   double humidity = 0;
   double pressure = 0;
+  String time="";
+
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
   late StreamSubscription subscription;
   TextEditingController tempController = TextEditingController();
@@ -164,6 +167,9 @@ class _MeasuresState extends State<Measures>
     temperature = valueMap['Temperature'].toDouble();
     humidity = valueMap['Humidity'].toDouble();
     pressure = valueMap['Pressure'].toDouble();
+    time = valueMap['Time'].toString();
+    DateTime date = DateFormat("yyyy-MM-dd' 'HH:mm:ss").parse(time);
+    String dateStr =DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'").format(date);
     // Round to 1 decimal places
     temperature = (temperature * 10).round() / 10;
     humidity = (humidity * 10).round() / 10;
@@ -182,7 +188,7 @@ class _MeasuresState extends State<Measures>
         temperature: temperature,
         humidity: humidity,
         pressure: pressure,
-        creation_time: TemporalDateTime(DateTime.now()),
+        creation_time: TemporalDateTime.fromString(dateStr),
         device_id: widget.user.device_id!
     );
     try {
