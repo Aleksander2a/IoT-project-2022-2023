@@ -262,6 +262,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
     final updatedUser = widget.user.copyWith(
         device_id: response.body.trim()
     );
+    widget.user = updatedUser;
     try {
       // save the updated User to the DataStore
       await Amplify.DataStore.save(updatedUser);
