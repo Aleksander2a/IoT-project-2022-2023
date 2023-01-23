@@ -234,7 +234,7 @@ void loop() {
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f, \"Time\": \"%s\", \"UserId\": %s, \"DeviceId \": %s}", T, h, p, time.c_str(), userId, ESP.getEfuseMac());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish(("sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
