@@ -50,12 +50,14 @@ class _MeasuresState extends State<Measures>
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
 
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
     mqttConnect(Uuid().v4());
     fetchSensorData();
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchSensorData());
   }
 
   Future<void> fetchSensorData() async {
@@ -148,57 +150,7 @@ class _MeasuresState extends State<Measures>
     } else {
       return false;
     }
-
-    subscription = client.updates?.listen(_onMessage) as StreamSubscription;
-    print('${widget.user.id}/${widget.user.device_id}/sensorData');
-    String topic = '${widget.user.id}/${widget.user.device_id}/sensorData';
-    client.subscribe(topic, MqttQos.atMostOnce);
-
     return true;
-  }
-
-  Future<void> _onMessage(List<mqtt.MqttReceivedMessage> event) async {
-    final mqtt.MqttPublishMessage recMess =
-    event[0].payload as mqtt.MqttPublishMessage;
-    final String message =
-    mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-    print('MQTT message: topic is <${event[0].topic}>, payload is <-- $message -->');
-    Map valueMap = json.decode(message);
-    temperature = valueMap['Temperature'].toDouble();
-    humidity = valueMap['Humidity'].toDouble();
-    pressure = valueMap['Pressure'].toDouble();
-    time = valueMap['Time'].toString();
-    DateTime date = DateFormat("yyyy-MM-dd' 'HH:mm:ss").parse(time);
-    String dateStr =DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'").format(date);
-    // Round to 1 decimal places
-    temperature = (temperature * 10).round() / 10;
-    humidity = (humidity * 10).round() / 10;
-    pressure = (pressure * 10).round() / 10;
-
-    tempController.text = temperature.toString();
-    humController.text = humidity.toString();
-    presController.text = pressure.toString();
-    setState(() {});
-    print(temperature.toString());
-    print(humidity.toString());
-    print(pressure.toString());
-
-    final sensorData = SensorData(
-        usersID: widget.user.id,
-        temperature: temperature,
-        humidity: humidity,
-        pressure: pressure,
-        creation_time: TemporalDateTime.fromString(dateStr),
-        device_id: widget.user.device_id!
-    );
-    try {
-      // save the new User to the DataStore
-      await Amplify.DataStore.save(sensorData);
-      // navigate to the home page
-      print("Saved sensor data");
-    } catch (e) {
-      safePrint('An error occurred while saving a new User: $e');
-    }
   }
 
   void onConnected() {
@@ -212,8 +164,6 @@ class _MeasuresState extends State<Measures>
   void pong() {
     print("Pong");
   }
-
-
 
   Widget _measurement(String title) {
     return Column(
