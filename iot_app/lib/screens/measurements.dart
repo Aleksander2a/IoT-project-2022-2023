@@ -45,7 +45,6 @@ class _MeasuresState extends State<Measures>
   String time="";
 
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
-  late StreamSubscription subscription;
   TextEditingController tempController = TextEditingController();
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
