@@ -11,7 +11,7 @@ extern "C" {
 }
 
 #include "time.h"
-const char* ntpServer = "europe.pool.ntp.org";
+const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
@@ -168,8 +168,8 @@ void setup() {
   stopPublishing = false;
 
   // Display unique code
-  Serial.print("Your ESP Board MAC Address is:  ");
-  Serial.println(WiFi.macAddress());
+  Serial.print("Your ESP chip ID is:  ");
+  Serial.println(ESP.getEfuseMac());
 
   // check if ssid and password are saved in file and if can connect with them
   Serial.println("Read WiFi data from file...");
@@ -234,11 +234,11 @@ void loop() {
   char sensorData[128];
   sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f, \"Time\": \"%s\"}", T, h, p, time.c_str());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + WiFi.macAddress() + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/" + WiFi.macAddress() + "/sensorData");
+  Serial.println(userId + "/" + ESP.getEfuseMac() + "/sensorData");
   Serial.println(sensorData);
 
   delay(1000);
@@ -262,7 +262,7 @@ void responseToGET(WiFiClient client) {
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println(WiFi.macAddress());
+  client.println(ESP.getEfuseMac());
   client.println();
 }
 
@@ -291,6 +291,7 @@ void responseToPOST(WiFiClient client) {
 
   if (r == 10) {
     Serial.println("Connection failed");
+    ESP.restart();
   } else {
     Serial.println("WiFi connected, IP address: ");
     WiFi.mode(WIFI_STA);
@@ -445,7 +446,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
 
-    pubSubClient.subscribe((userId + "/" + WiFi.macAddress() + "/commands").c_str());
+    pubSubClient.subscribe((userId + "/" + ESP.getEfuseMac() + "/commands").c_str());
     pubSubClient.loop();
   }
 }
