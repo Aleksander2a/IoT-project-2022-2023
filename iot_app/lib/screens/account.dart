@@ -211,12 +211,9 @@ class _AccountState extends State<Account> {
       onTap: () {
         if (text == "Zmień hasło") {
           _changePassword();
-          // TODO: clear the text fields
         } else if (text == "Zmień nazwę") {
           _changeUsername();
-          // TODO: clear the text fields
         } else if (text == "Zmień/podłącz płytkę") {
-          // TODO: clear the text fields
           Navigator.push(
               context, MaterialPageRoute(builder: (context) => WifiConnectPage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile, isRegistering: false)));
         }

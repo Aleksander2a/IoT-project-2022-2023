@@ -69,7 +69,6 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
     // check if deviceId matches pattern for mac address
-    final deviceRegexp = RegExp(r'^[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}$');
     final newUser = Users(
         username: username,
         password: sha1.convert(utf8.encode(password)).toString(),

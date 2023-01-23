@@ -213,9 +213,6 @@ class _MeasuresState extends State<Measures>
     print("Pong");
   }
 
-  void setMeassuerments(String uniqueId) async {
-
-  }
 
 
   Widget _measurement(String title) {

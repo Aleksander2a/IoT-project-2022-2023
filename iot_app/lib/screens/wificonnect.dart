@@ -337,7 +337,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-              isRegistering?"Podaj dane:":"Zrestartuj urządzenie i podaj dane.",
+              "Podaj dane:",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
