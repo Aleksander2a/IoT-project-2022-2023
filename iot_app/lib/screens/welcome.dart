@@ -100,14 +100,14 @@ class _WelcomePageState extends State<WelcomePage> {
     return InkWell(
       onTap: () {
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => WifiConnectPage(true)));
+            context, MaterialPageRoute(builder: (context) => SignUpPage()));
       },
       child: Container(
         width: MediaQuery.of(context).size.width,
         padding: EdgeInsets.symmetric(vertical: 13),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(5)),
+            borderRadius: BorderRadius.all(Radius.circular(5)),
             boxShadow: <BoxShadow>[
               BoxShadow(
                   color: Color(0xff1c98ad).withAlpha(100),
@@ -126,8 +126,8 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Widget _title() {
     return RichText(
-      textAlign: TextAlign.center,
-      text: TextSpan(
+        textAlign: TextAlign.center,
+        text: TextSpan(
           text: 'IoT Projekt',
           style: GoogleFonts.portLligatSans(
             textStyle: Theme.of(context).textTheme.headline1,
@@ -135,7 +135,7 @@ class _WelcomePageState extends State<WelcomePage> {
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
-      )
+        )
     );
   }
 

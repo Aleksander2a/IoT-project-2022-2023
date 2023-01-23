@@ -304,7 +304,6 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
             },
           );
         } else if(title == 'Aktywuj') {
-          // TODO: implement
           // display AlertDialog to confirm the change
           showDialog(
             context: context,

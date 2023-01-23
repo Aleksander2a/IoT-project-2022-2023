@@ -1,4 +1,40 @@
 {
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-iotagh-dev-203326-authRole",
+      "UnauthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-dev-203326-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-dev-203326-authRole",
+      "Region": "eu-west-1",
+      "DeploymentBucketName": "amplify-iotagh-dev-203326-deployment",
+      "UnauthRoleName": "amplify-iotagh-dev-203326-unauthRole",
+      "StackName": "amplify-iotagh-dev-203326",
+      "StackId": "arn:aws:cloudformation:eu-west-1:496012026433:stack/amplify-iotagh-dev-203326/5cc9da90-976f-11ed-8a26-06e8f11d0831",
+      "AmplifyAppId": "d2cyg48po3zaug"
+    },
+    "categories": {
+      "auth": {
+        "iotagh": {}
+      }
+    }
+  },
+  "devw": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-iotagh-devw-203445-authRole",
+      "UnauthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-devw-203445-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-devw-203445-authRole",
+      "Region": "eu-west-1",
+      "DeploymentBucketName": "amplify-iotagh-devw-203445-deployment",
+      "UnauthRoleName": "amplify-iotagh-devw-203445-unauthRole",
+      "StackName": "amplify-iotagh-devw-203445",
+      "StackId": "arn:aws:cloudformation:eu-west-1:496012026433:stack/amplify-iotagh-devw-203445/62830b80-91ef-11ed-8d79-06b94f5e996b",
+      "AmplifyAppId": "d2cyg48po3zaug"
+    },
+    "categories": {
+      "auth": {
+        "iotagh": {}
+      }
+    }
+  },
   "staging": {
     "awscloudformation": {
       "AuthRoleName": "amplify-iotagh-staging-151728-authRole",
@@ -10,6 +46,11 @@
       "StackName": "amplify-iotagh-staging-151728",
       "StackId": "arn:aws:cloudformation:eu-west-1:496012026433:stack/amplify-iotagh-staging-151728/6aea46d0-8079-11ed-8e08-02d9624bb195",
       "AmplifyAppId": "d2cyg48po3zaug"
+    },
+    "categories": {
+      "auth": {
+        "iotagh": {}
+      }
     }
   }
 }

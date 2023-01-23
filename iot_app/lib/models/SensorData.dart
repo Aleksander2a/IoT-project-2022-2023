@@ -33,6 +33,7 @@ class SensorData extends Model {
   final double? _pressure;
   final String? _usersID;
   final TemporalDateTime? _creation_time;
+  final String? _device_id;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
 
@@ -87,6 +88,19 @@ class SensorData extends Model {
     }
   }
   
+  String get device_id {
+    try {
+      return _device_id!;
+    } catch(e) {
+      throw new AmplifyCodeGenModelException(
+          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
+          recoverySuggestion:
+            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
+          underlyingException: e.toString()
+          );
+    }
+  }
+  
   TemporalDateTime? get createdAt {
     return _createdAt;
   }
@@ -95,16 +109,17 @@ class SensorData extends Model {
     return _updatedAt;
   }
   
-  const SensorData._internal({required this.id, temperature, humidity, pressure, required usersID, required creation_time, createdAt, updatedAt}): _temperature = temperature, _humidity = humidity, _pressure = pressure, _usersID = usersID, _creation_time = creation_time, _createdAt = createdAt, _updatedAt = updatedAt;
+  const SensorData._internal({required this.id, temperature, humidity, pressure, required usersID, required creation_time, required device_id, createdAt, updatedAt}): _temperature = temperature, _humidity = humidity, _pressure = pressure, _usersID = usersID, _creation_time = creation_time, _device_id = device_id, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory SensorData({String? id, double? temperature, double? humidity, double? pressure, required String usersID, required TemporalDateTime creation_time}) {
+  factory SensorData({String? id, double? temperature, double? humidity, double? pressure, required String usersID, required TemporalDateTime creation_time, required String device_id}) {
     return SensorData._internal(
       id: id == null ? UUID.getUUID() : id,
       temperature: temperature,
       humidity: humidity,
       pressure: pressure,
       usersID: usersID,
-      creation_time: creation_time);
+      creation_time: creation_time,
+      device_id: device_id);
   }
   
   bool equals(Object other) {
@@ -120,7 +135,8 @@ class SensorData extends Model {
       _humidity == other._humidity &&
       _pressure == other._pressure &&
       _usersID == other._usersID &&
-      _creation_time == other._creation_time;
+      _creation_time == other._creation_time &&
+      _device_id == other._device_id;
   }
   
   @override
@@ -137,6 +153,7 @@ class SensorData extends Model {
     buffer.write("pressure=" + (_pressure != null ? _pressure!.toString() : "null") + ", ");
     buffer.write("usersID=" + "$_usersID" + ", ");
     buffer.write("creation_time=" + (_creation_time != null ? _creation_time!.format() : "null") + ", ");
+    buffer.write("device_id=" + "$_device_id" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
@@ -144,14 +161,15 @@ class SensorData extends Model {
     return buffer.toString();
   }
   
-  SensorData copyWith({double? temperature, double? humidity, double? pressure, String? usersID, TemporalDateTime? creation_time}) {
+  SensorData copyWith({double? temperature, double? humidity, double? pressure, String? usersID, TemporalDateTime? creation_time, String? device_id}) {
     return SensorData._internal(
       id: id,
       temperature: temperature ?? this.temperature,
       humidity: humidity ?? this.humidity,
       pressure: pressure ?? this.pressure,
       usersID: usersID ?? this.usersID,
-      creation_time: creation_time ?? this.creation_time);
+      creation_time: creation_time ?? this.creation_time,
+      device_id: device_id ?? this.device_id);
   }
   
   SensorData.fromJson(Map<String, dynamic> json)  
@@ -161,15 +179,16 @@ class SensorData extends Model {
       _pressure = (json['pressure'] as num?)?.toDouble(),
       _usersID = json['usersID'],
       _creation_time = json['creation_time'] != null ? TemporalDateTime.fromString(json['creation_time']) : null,
+      _device_id = json['device_id'],
       _createdAt = json['createdAt'] != null ? TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'usersID': _usersID, 'creation_time': _creation_time?.format(), 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'usersID': _usersID, 'creation_time': _creation_time?.format(), 'device_id': _device_id, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'usersID': _usersID, 'creation_time': _creation_time, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'temperature': _temperature, 'humidity': _humidity, 'pressure': _pressure, 'usersID': _usersID, 'creation_time': _creation_time, 'device_id': _device_id, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
   static final QueryModelIdentifier<SensorDataModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<SensorDataModelIdentifier>();
@@ -179,6 +198,7 @@ class SensorData extends Model {
   static final QueryField PRESSURE = QueryField(fieldName: "pressure");
   static final QueryField USERSID = QueryField(fieldName: "usersID");
   static final QueryField CREATION_TIME = QueryField(fieldName: "creation_time");
+  static final QueryField DEVICE_ID = QueryField(fieldName: "device_id");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "SensorData";
     modelSchemaDefinition.pluralName = "SensorData";
@@ -228,6 +248,12 @@ class SensorData extends Model {
       key: SensorData.CREATION_TIME,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.dateTime)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: SensorData.DEVICE_ID,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.nonQueryField(

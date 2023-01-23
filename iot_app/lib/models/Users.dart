@@ -90,17 +90,8 @@ class Users extends Model {
     return _UserSensorData;
   }
   
-  String get device_id {
-    try {
-      return _device_id!;
-    } catch(e) {
-      throw new AmplifyCodeGenModelException(
-          AmplifyExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage,
-          recoverySuggestion:
-            AmplifyExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion,
-          underlyingException: e.toString()
-          );
-    }
+  String? get device_id {
+    return _device_id;
   }
   
   TemporalDateTime? get createdAt {
@@ -111,9 +102,9 @@ class Users extends Model {
     return _updatedAt;
   }
   
-  const Users._internal({required this.id, required username, required password, active_profile_id, UserProfiles, UserSensorData, required device_id, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _UserProfiles = UserProfiles, _UserSensorData = UserSensorData, _device_id = device_id, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Users._internal({required this.id, required username, required password, active_profile_id, UserProfiles, UserSensorData, device_id, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _UserProfiles = UserProfiles, _UserSensorData = UserSensorData, _device_id = device_id, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory Users({String? id, required String username, required String password, String? active_profile_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData, required String device_id}) {
+  factory Users({String? id, required String username, required String password, String? active_profile_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData, String? device_id}) {
     return Users._internal(
       id: id == null ? UUID.getUUID() : id,
       username: username,
@@ -264,7 +255,7 @@ class Users extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: Users.DEVICE_ID,
-      isRequired: true,
+      isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     

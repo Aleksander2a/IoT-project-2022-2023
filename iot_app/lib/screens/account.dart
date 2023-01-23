@@ -36,22 +36,22 @@ class _AccountState extends State<Account> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
+              title,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
             height: 10,
           ),
           TextField(
-            onChanged: (value) {
-              if (title == 'Nazwa użytkownika: ' + widget.user.username) {
-                _username = value;
-              } else if (title == 'Obecne hasło') {
-                _currentPassword = value;
-              } else if (title == 'Nowe hasło') {
-                _newPassword = value;
-              }
-            },
+              onChanged: (value) {
+                if (title == 'Nazwa użytkownika: ' + widget.user.username) {
+                  _username = value;
+                } else if (title == 'Obecne hasło') {
+                  _currentPassword = value;
+                } else if (title == 'Nowe hasło') {
+                  _newPassword = value;
+                }
+              },
               obscureText: isPassword,
               decoration: InputDecoration(
                   border: InputBorder.none,
@@ -128,9 +128,12 @@ class _AccountState extends State<Account> {
   Future<bool> _userExists() async {
     // get the current text field contents
     try {
-      List<Users> users = await Amplify.DataStore.query(Users.classType);
-      for (Users user in users) {
-        if (user.username == _username && user.id != widget.user.id) {
+      List<Users> users = await Amplify.DataStore.query(
+          Users.classType,
+          where: Users.USERNAME.eq(_username)
+      );
+       if(users.isNotEmpty) {
+        if (users[0].username == _username && users[0].id != widget.user.id) {
           return true;
         }
       }
@@ -208,14 +211,11 @@ class _AccountState extends State<Account> {
       onTap: () {
         if (text == "Zmień hasło") {
           _changePassword();
-          // TODO: clear the text fields
         } else if (text == "Zmień nazwę") {
           _changeUsername();
-          // TODO: clear the text fields
-        } else if (text == "Zmień sieć") {
-          // TODO: clear the text fields
+        } else if (text == "Zmień/podłącz płytkę") {
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => WifiConnectPage(false)));
+              context, MaterialPageRoute(builder: (context) => WifiConnectPage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile, isRegistering: false)));
         }
         widget.notifyParent();
       },
@@ -276,12 +276,7 @@ class _AccountState extends State<Account> {
                       SizedBox(height: 15),
                       _submitButton("Zmień hasło"),
                       SizedBox(height: 25),
-                      Text(
-                          "Ustawienia sieci",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
-                      ),
-                      SizedBox(height: 15),
-                      _submitButton("Zmień sieć"),
+                      _submitButton("Zmień/podłącz płytkę"),
                     ],
                   ),
                 ),

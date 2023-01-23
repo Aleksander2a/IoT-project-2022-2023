@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iot_app/screens/home.dart';
+import 'package:iot_app/screens/wificonnect.dart';
 import 'login.dart';
 
 // Amplify Flutter Packages
@@ -16,29 +17,28 @@ import 'package:uuid/uuid.dart';
 
 
 class SignUpPage extends StatefulWidget {
-  SignUpPage(this.uid, {Key? key, this.title}) : super(key: key);
+  SignUpPage({Key? key, this.title}) : super(key: key);
 
   final String? title;
-  final String uid;
 
   @override
-  _SignUpPageState createState() => _SignUpPageState(uid);
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  _SignUpPageState(String uid){_deviceId=uid;}
+
   String _username = '';
-  String _deviceId = '';
   String _password = '';
 
   Future<bool> _userExists() async {
     // get the current text field contents
     try {
-      List<Users> users = await Amplify.DataStore.query(Users.classType);
-      for (Users user in users) {
-        if (user.username == _username) {
-          return true;
-        }
+      List<Users> users = await Amplify.DataStore.query(
+          Users.classType,
+          where: Users.USERNAME.eq(_username)
+      );
+      if (users.isNotEmpty) {
+        return true;
       }
       return false;
     } catch (e) {
@@ -50,10 +50,9 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _saveUser() async {
     // get the current text field contents
     final username = _username;
-    final deviceId = _deviceId;
     final password = _password;
     // create a new User from the form values
-    if (username.isEmpty || deviceId.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Uzupełnij wszystkie pola'),
@@ -70,18 +69,8 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
     // check if deviceId matches pattern for mac address
-    final deviceRegexp = RegExp(r'^[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}:[a-zA-Z0-9]{2}$');
-    if (!deviceRegexp.hasMatch(deviceId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Niepoprawny format identyfikatora urządzenia:$deviceId.'),
-        ),
-      );
-      return;
-    }
     final newUser = Users(
         username: username,
-        device_id: deviceId,
         password: sha1.convert(utf8.encode(password)).toString(),
         UserProfiles: []
     );
@@ -96,8 +85,8 @@ class _SignUpPageState extends State<SignUpPage> {
         usersID: newUser.id
     );
     final newUserWithDefaultProfile = newUser.copyWith(
-      active_profile_id: newProfile.id,
-      UserProfiles: [newProfile]
+        active_profile_id: newProfile.id,
+        UserProfiles: [newProfile]
     );
     try {
       // save the new User to the DataStore
@@ -106,7 +95,7 @@ class _SignUpPageState extends State<SignUpPage> {
       // navigate to the home page
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(user: newUserWithDefaultProfile, userProfiles: newUserWithDefaultProfile.UserProfiles!, activeProfile: newProfile)),
+        MaterialPageRoute(builder: (context) => WifiConnectPage(user: newUserWithDefaultProfile, userProfiles: newUserWithDefaultProfile.UserProfiles!, activeProfile: newProfile, isRegistering: true)),
       );
     } catch (e) {
       safePrint('An error occurred while saving a new User: $e');
@@ -121,8 +110,8 @@ class _SignUpPageState extends State<SignUpPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
+              title,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
           ),
           SizedBox(
             height: 10,
