@@ -231,7 +231,7 @@ void loop() {
 
   // AWS publish message
   char sensorData[128];
-  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%lu\"}", T, h, p, getTime(), userId.c_str(), ESP.getEfuseMac());
+  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%s\"}", T, h, p, getTime(), userId.c_str(), ESP.getEfuseMac());
   if (stopPublishing == false) {
     boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");

@@ -56,16 +56,19 @@ class _MeasuresState extends State<Measures>
     super.initState();
     mqttConnect(Uuid().v4());
     fetchSensorData();
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchSensorData());
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => fetchSensorData());
   }
 
   Future<void> fetchSensorData() async {
     // Get sensor data from API
     String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?userid=${widget.user.id}';
+    print("Before calling API");
     var response = await http.get(
         Uri.parse(uri),
         headers: {"x-api-key": "b0zk8nTWwj5E63DstZlBXa2xstTKArlv4nYjjvfS"}
     );
+    print(response.body);
+    print("After calling API");
     var data = jsonDecode(response.body);
     data = data[0];
     if (data['device_d'] != widget.user.device_id) {

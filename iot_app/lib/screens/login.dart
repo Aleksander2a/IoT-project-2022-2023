@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
           Users.classType,
           where: Users.USERNAME.eq(_username)
       );
-        if (users.isNotEmpty && users[0].username == _username && sha1.convert(utf8.encode(_password)).toString() == users[0].password) {
+        if (users.isNotEmpty && sha1.convert(utf8.encode(_password)).toString() == users[0].password) {
           List<Profiles> userProfiles = await Amplify.DataStore.query(
             Profiles.classType,
             where: Profiles.USERSID.eq(users[0].id),
