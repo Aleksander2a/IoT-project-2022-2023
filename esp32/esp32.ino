@@ -241,11 +241,11 @@ void loop() {
   char sensorData[256];
   sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%s\"}", T, h, p, getTime(), userId.c_str(), deviceId.c_str());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + deviceId + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((userId + "/" + deviceId + "/data").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/" + deviceId + "/sensorData");
+  Serial.println(userId + "/" + deviceId + "/data");
   Serial.println(sensorData);
 
   delay(1000);
