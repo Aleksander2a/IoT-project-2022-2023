@@ -71,7 +71,8 @@ class _MeasuresState extends State<Measures>
     print("After calling API");
     var data = jsonDecode(response.body);
     data = data[0];
-    if (data['device_d'] != widget.user.device_id) {
+    if (data['device_id'] != widget.user.device_id) {
+      print("Wrong device");
       return;
     }
     setState(() {
@@ -88,6 +89,9 @@ class _MeasuresState extends State<Measures>
       humController.text = humidity.toString();
       presController.text = pressure.toString();
     });
+    print("Temperature: $temperature");
+    print("Humidity: $humidity");
+    print("Pressure: $pressure");
   }
 
   Color isTempOk() {
