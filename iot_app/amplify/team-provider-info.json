@@ -1,4 +1,22 @@
 {
+  "betae": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-iotagh-betae-132748-authRole",
+      "UnauthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-betae-132748-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::496012026433:role/amplify-iotagh-betae-132748-authRole",
+      "Region": "eu-west-1",
+      "DeploymentBucketName": "amplify-iotagh-betae-132748-deployment",
+      "UnauthRoleName": "amplify-iotagh-betae-132748-unauthRole",
+      "StackName": "amplify-iotagh-betae-132748",
+      "StackId": "arn:aws:cloudformation:eu-west-1:496012026433:stack/amplify-iotagh-betae-132748/e53c4be0-9bea-11ed-9c84-06bbd5c2a299",
+      "AmplifyAppId": "d2cyg48po3zaug"
+    },
+    "categories": {
+      "auth": {
+        "iotagh": {}
+      }
+    }
+  },
   "beta": {
     "awscloudformation": {
       "AuthRoleName": "amplify-iotagh-beta-163303-authRole",

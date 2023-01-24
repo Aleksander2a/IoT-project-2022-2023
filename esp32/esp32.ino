@@ -230,15 +230,14 @@ void loop() {
   }
 
   // AWS publish message
-  String time=getLocalTime();
   char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f, \"Time\": \"%s\", \"UserId\": %s, \"DeviceId \": %lu}", T, h, p, time.c_str(), userId.c_str(), ESP.getEfuseMac());
+  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%lu\"}", T, h, p, getTime(), userId.c_str(), ESP.getEfuseMac());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish("sensorData", sensorData);
+    boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println("sensorData");
+  Serial.println(userId + "/" + ESP.getEfuseMac() + "/sensorData");
   Serial.println(sensorData);
 
   delay(1000);
@@ -451,29 +450,17 @@ void connectAWS() {
   }
 }
 // ===================================================== AWS END =====================================================
+
 // ===================================================== TIME BEGIN =====================================================
-String getLocalTime(){
+// Function that gets current epoch time
+unsigned long getTime() {
+  time_t now;
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return "Failed to obtain time";
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
   }
-  String day=String(timeinfo.tm_mday);
-  if(day.length()==1)
-    day="0"+day;
-  String month=String(timeinfo.tm_mon+1);
-  if(month.length()==1)
-    month="0"+month;
-  String hour=String(timeinfo.tm_hour);
-  if(hour.length()==1)
-    hour="0"+hour;
-  String min=String(timeinfo.tm_min);
-  if(min.length()==1)
-    min="0"+min;
-  String sec=String(timeinfo.tm_sec);  
-  if(sec.length()==1)
-    sec="0"+sec;
-  String date=String(1900 + timeinfo.tm_year) + "-" + month + "-" + day + " " +  hour+ ":" + min + ":" + sec;
-  return date;
+  time(&now);
+  return now;
 }
 // ===================================================== TIME END =====================================================

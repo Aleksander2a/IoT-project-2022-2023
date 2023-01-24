@@ -21,6 +21,7 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 
 
@@ -42,7 +43,6 @@ class _MeasuresState extends State<Measures>
   double temperature = 0;
   double humidity = 0;
   double pressure = 0;
-  String time="";
 
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
   TextEditingController tempController = TextEditingController();
@@ -60,20 +60,31 @@ class _MeasuresState extends State<Measures>
   }
 
   Future<void> fetchSensorData() async {
-    if(tempController.text == ''){
-      List<SensorData> sensorData = await Amplify.DataStore.query(
-        SensorData.classType,
-        where: SensorData.USERSID.eq(widget.user.id),
-        sortBy: [SensorData.CREATION_TIME.descending()],
-        pagination: const QueryPagination(limit: 1),
-      );
-      if (sensorData.isNotEmpty) {
-        tempController.text = sensorData[0].temperature.toString();
-        humController.text = sensorData[0].humidity.toString();
-        presController.text = sensorData[0].pressure.toString();
-        setState(() {});
-      }
+    // Get sensor data from API
+    String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?userid=${widget.user.id}';
+    var response = await http.get(
+        Uri.parse(uri),
+        headers: {"x-api-key": "b0zk8nTWwj5E63DstZlBXa2xstTKArlv4nYjjvfS"}
+    );
+    var data = jsonDecode(response.body);
+    data = data[0];
+    if (data['device_d'] != widget.user.device_id) {
+      return;
     }
+    setState(() {
+      temperature = data['temperature'];
+      humidity = data['humidity'];
+      pressure = data['pressure'];
+
+      // Round to 1 decimal places
+      temperature = (temperature * 10).round() / 10;
+      humidity = (humidity * 10).round() / 10;
+      pressure = (pressure * 10).round() / 10;
+
+      tempController.text = temperature.toString();
+      humController.text = humidity.toString();
+      presController.text = pressure.toString();
+    });
   }
 
   Color isTempOk() {
