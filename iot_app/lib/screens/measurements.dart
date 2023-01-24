@@ -40,9 +40,9 @@ class Measures extends StatefulWidget {
 class _MeasuresState extends State<Measures>
     with AutomaticKeepAliveClientMixin {
   String dropdownValue = '';
-  double temperature = 0;
-  double humidity = 0;
-  double pressure = 0;
+  num temperature = 0;
+  num humidity = 0;
+  num pressure = 0;
 
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
   TextEditingController tempController = TextEditingController();
@@ -62,6 +62,7 @@ class _MeasuresState extends State<Measures>
   Future<void> fetchSensorData() async {
     // Get sensor data from API
     String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?userid=${widget.user.id}';
+    print("URI: $uri");
     print("Before calling API");
     var response = await http.get(
         Uri.parse(uri),
@@ -70,6 +71,9 @@ class _MeasuresState extends State<Measures>
     print(response.body);
     print("After calling API");
     var data = jsonDecode(response.body);
+    if(data[0] == null) {
+      return;
+    }
     data = data[0];
     if (data['device_id'] != widget.user.device_id) {
       print("Wrong device");
