@@ -36,6 +36,10 @@ String passwordWiFi = "";
 
 String userId = "";
 
+char deviceId_buffer[50];
+String deviceId = "";
+
+
 WiFiServer server(80);
 
 String header;
@@ -161,6 +165,10 @@ void setup() {
     delay(10000);
   }
 
+  // assign chip ID to variable
+  sprintf(deviceId_buffer, "%lu", ESP.getEfuseMac());
+  deviceId = String(deviceId_buffer);
+
   // AWS
   net.setCACert(rootCA);
   net.setCertificate(certificate_pem_crt);
@@ -169,7 +177,7 @@ void setup() {
 
   // Display unique code
   Serial.print("Your ESP chip ID is:  ");
-  Serial.println(ESP.getEfuseMac());
+  Serial.println(deviceId);
 
   // check if ssid and password are saved in file and if can connect with them
   Serial.println("Read WiFi data from file...");
@@ -231,13 +239,13 @@ void loop() {
 
   // AWS publish message
   char sensorData[256];
-  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%s\"}", T, h, p, getTime(), userId.c_str(), ESP.getEfuseMac());
+  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%s\"}", T, h, p, getTime(), userId.c_str(), deviceId.c_str());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((userId + "/" + deviceId + "/sensorData").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/" + ESP.getEfuseMac() + "/sensorData");
+  Serial.println(userId + "/" + deviceId + "/sensorData");
   Serial.println(sensorData);
 
   delay(1000);
@@ -261,7 +269,7 @@ void responseToGET(WiFiClient client) {
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println(ESP.getEfuseMac());
+  client.println(deviceId);
   client.println();
 }
 
@@ -445,7 +453,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
 
-    pubSubClient.subscribe((userId + "/" + ESP.getEfuseMac() + "/commands").c_str());
+    pubSubClient.subscribe((userId + "/" + deviceId + "/commands").c_str());
     pubSubClient.loop();
   }
 }
