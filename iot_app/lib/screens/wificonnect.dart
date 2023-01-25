@@ -261,12 +261,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
         device_id: response.body.trim()
     );
     widget.user = updatedUser;
-    try {
-      // save the updated User to the DataStore
-      await Amplify.DataStore.save(updatedUser);
-    } catch (e) {
-      safePrint('An error occurred while saving a new User: $e');
-    }
     if(!await _isESPConnectedToWiFi())return;
     var isconnectedToWifi = await AndroidFlutterWifi.isConnected();
     while(!isconnectedToWifi){
@@ -275,6 +269,12 @@ class _WifiConnectState extends State<WifiConnectPage>{
       isconnectedToWifi=await AndroidFlutterWifi.isConnected();
     }
     EasyLoading.dismiss();
+    try {
+      // save the updated User to the DataStore
+      await Amplify.DataStore.save(updatedUser);
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => HomePage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile)));
   }
