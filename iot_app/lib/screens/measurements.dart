@@ -56,7 +56,7 @@ class _MeasuresState extends State<Measures>
     super.initState();
     mqttConnect(Uuid().v4());
     fetchSensorData();
-    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => fetchSensorData());
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchSensorData());
   }
 
   Future<void> fetchSensorData() async {
