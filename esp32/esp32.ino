@@ -34,8 +34,6 @@ const char* passwordAP = "IOTagh-2022";
 String ssidWiFi = "";
 String passwordWiFi = "";
 
-String userId = "";
-
 char deviceId_buffer[50];
 String deviceId = "";
 
@@ -181,8 +179,7 @@ void setup() {
 
   // check if ssid and password are saved in file and if can connect with them
   Serial.println("Read WiFi data from file...");
-  readUseridSsidAndPasswordFromFile();
-  Serial.println("USERID from file: " + userId);
+  readSsidAndPasswordFromFile();
   Serial.println("SSID from file: " + ssidWiFi);
   Serial.println("PASSWORD from file: " + passwordWiFi);
   if(ssidWiFi != "") {
@@ -239,13 +236,13 @@ void loop() {
 
   // AWS publish message
   char sensorData[256];
-  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"userid\": \"%s\", \"device_id\": \"%s\"}", T, h, p, getTime(), userId.c_str(), deviceId.c_str());
+  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"device_id\": \"%s\"}", T, h, p, getTime(), deviceId.c_str());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + deviceId + "/data").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((deviceId + "/data").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/" + deviceId + "/data");
+  Serial.println(deviceId + "/data");
   Serial.println(sensorData);
 
   delay(1000);
@@ -280,7 +277,7 @@ void responseToPOST(WiFiClient client) {
   client.println();
 
   WiFi.mode(WIFI_AP_STA);
-  getSsidAndPasswordAndUserID(header);
+  getSsidAndPassword(header);
   Serial.print(" Connecting to ");
   Serial.print(ssidWiFi);
 
@@ -304,16 +301,15 @@ void responseToPOST(WiFiClient client) {
     WiFi.mode(WIFI_STA);
     // save ssid and password to file
     Serial.println("Saving WiFi data to file...");
-    writeUseridSsidAndPasswordToFile();
+    writeSsidAndPasswordToFile();
   }
 }
 
-void writeUseridSsidAndPasswordToFile() {
+void writeSsidAndPasswordToFile() {
   // Open or create the file
   File file = SPIFFS.open("/config.txt", FILE_WRITE);
   
   // Write the data to the file
-  file.println("userid=" + userId);
   file.println("ssid=" + ssidWiFi);
   file.println("password=" + passwordWiFi);
   
@@ -321,7 +317,7 @@ void writeUseridSsidAndPasswordToFile() {
   file.close();
 }
 
-void readUseridSsidAndPasswordFromFile() {
+void readSsidAndPasswordFromFile() {
   // Open the file
   File file = SPIFFS.open("/config.txt", FILE_READ);
   
@@ -340,9 +336,6 @@ void readUseridSsidAndPasswordFromFile() {
     } else if (line.startsWith("password=")) {
       passwordWiFi = line.substring(9);
       passwordWiFi.trim();
-    } else if (line.startsWith("userid=")) {
-      userId = line.substring(7);
-      userId.trim();
     }
   }
   
@@ -351,30 +344,24 @@ void readUseridSsidAndPasswordFromFile() {
 }
 
 
-void getSsidAndPasswordAndUserID(String header) {
+void getSsidAndPassword(String header) {
   header += '\n';
   int last_nl = header.lastIndexOf('\n');
   int last_but1_nl = header.substring(0, last_nl).lastIndexOf('\n');
   String payload = header.substring(last_but1_nl + 1, last_nl);
   int appersantidx1 = payload.indexOf('&');
   int appersantidx2 = payload.lastIndexOf('&');
-  
-  // User ID
-  String uidPart = payload.substring(0, appersantidx1);
-  int eqidx = uidPart.indexOf('=');
-  userId = uidPart.substring(eqidx + 1);
 
   // SSID
-  String ssidPart = payload.substring(appersantidx1 + 1, appersantidx2);
-  eqidx = ssidPart.indexOf('=');
+  String ssidPart = payload.substring(0, appersantidx1);
+  int eqidx = ssidPart.indexOf('=');
   ssidWiFi = ssidPart.substring(eqidx + 1);
 
   // Password
-  String pwdPart = payload.substring(appersantidx2 + 1);
+  String pwdPart = payload.substring(appersantidx1 + 1, appersantidx2);
   eqidx = pwdPart.indexOf('=');
   passwordWiFi = pwdPart.substring(eqidx + 1);
 
-  Serial.println("\nUID: " + userId);
   Serial.println("SSID: " + ssidWiFi);
   Serial.println("PWD: " + passwordWiFi);
 }
@@ -453,7 +440,7 @@ void connectAWS() {
     }
     Serial.println(" connected");
 
-    pubSubClient.subscribe((userId + "/" + deviceId + "/commands").c_str());
+    pubSubClient.subscribe((deviceId + "/commands").c_str());
     pubSubClient.loop();
   }
 }

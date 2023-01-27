@@ -61,7 +61,7 @@ class _MeasuresState extends State<Measures>
 
   Future<void> fetchSensorData() async {
     // Get sensor data from API
-    String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?userid=${widget.user.id}';
+    String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?device_id=${widget.user.device_id}';
     print("URI: $uri");
     print("Before calling API");
     var response = await http.get(
@@ -248,12 +248,12 @@ class _MeasuresState extends State<Measures>
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(

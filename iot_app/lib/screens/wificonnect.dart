@@ -229,7 +229,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
     http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
-        'user_id': widget.user.id,
         'ssid': _ssid,
         'pwd': _password
       },
