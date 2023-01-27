@@ -1,6 +1,9 @@
 # IoT-project-2022-2023
 
 ## Columns in the table to store sensor data:
+- Partition key: `device_id` - `String`
+- Sort key: `creation_time` - `Number` (epoch time)
+
 | device_id      | temperature | humidity     | pressure | creation_time |
 | :---           |    :----:   | :----:       |:----:    |          ---: |
 
