@@ -83,6 +83,7 @@ function isEmptyObject(obj) {
 
 ## Lambda Function to retrieve last sensor data by `device_id` param in the URL:
 - this function is exposed using API GATEWAY
+- mobile app calls this API with the `device_id` of logged user
 
 ```js
 const AWS = require('aws-sdk');
