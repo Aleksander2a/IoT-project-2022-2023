@@ -34,7 +34,6 @@ class Users extends Model {
   final String? _password;
   final String? _active_profile_id;
   final List<Profiles>? _UserProfiles;
-  final List<SensorData>? _UserSensorData;
   final String? _device_id;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
@@ -86,10 +85,6 @@ class Users extends Model {
     return _UserProfiles;
   }
   
-  List<SensorData>? get UserSensorData {
-    return _UserSensorData;
-  }
-  
   String? get device_id {
     return _device_id;
   }
@@ -102,16 +97,15 @@ class Users extends Model {
     return _updatedAt;
   }
   
-  const Users._internal({required this.id, required username, required password, active_profile_id, UserProfiles, UserSensorData, device_id, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _UserProfiles = UserProfiles, _UserSensorData = UserSensorData, _device_id = device_id, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Users._internal({required this.id, required username, required password, active_profile_id, UserProfiles, device_id, createdAt, updatedAt}): _username = username, _password = password, _active_profile_id = active_profile_id, _UserProfiles = UserProfiles, _device_id = device_id, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory Users({String? id, required String username, required String password, String? active_profile_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData, String? device_id}) {
+  factory Users({String? id, required String username, required String password, String? active_profile_id, List<Profiles>? UserProfiles, String? device_id}) {
     return Users._internal(
       id: id == null ? UUID.getUUID() : id,
       username: username,
       password: password,
       active_profile_id: active_profile_id,
       UserProfiles: UserProfiles != null ? List<Profiles>.unmodifiable(UserProfiles) : UserProfiles,
-      UserSensorData: UserSensorData != null ? List<SensorData>.unmodifiable(UserSensorData) : UserSensorData,
       device_id: device_id);
   }
   
@@ -128,7 +122,6 @@ class Users extends Model {
       _password == other._password &&
       _active_profile_id == other._active_profile_id &&
       DeepCollectionEquality().equals(_UserProfiles, other._UserProfiles) &&
-      DeepCollectionEquality().equals(_UserSensorData, other._UserSensorData) &&
       _device_id == other._device_id;
   }
   
@@ -152,14 +145,13 @@ class Users extends Model {
     return buffer.toString();
   }
   
-  Users copyWith({String? username, String? password, String? active_profile_id, List<Profiles>? UserProfiles, List<SensorData>? UserSensorData, String? device_id}) {
+  Users copyWith({String? username, String? password, String? active_profile_id, List<Profiles>? UserProfiles, String? device_id}) {
     return Users._internal(
       id: id,
       username: username ?? this.username,
       password: password ?? this.password,
       active_profile_id: active_profile_id ?? this.active_profile_id,
       UserProfiles: UserProfiles ?? this.UserProfiles,
-      UserSensorData: UserSensorData ?? this.UserSensorData,
       device_id: device_id ?? this.device_id);
   }
   
@@ -174,22 +166,16 @@ class Users extends Model {
           .map((e) => Profiles.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
           .toList()
         : null,
-      _UserSensorData = json['UserSensorData'] is List
-        ? (json['UserSensorData'] as List)
-          .where((e) => e?['serializedData'] != null)
-          .map((e) => SensorData.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
-          .toList()
-        : null,
       _device_id = json['device_id'],
       _createdAt = json['createdAt'] != null ? TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'UserProfiles': _UserProfiles?.map((Profiles? e) => e?.toJson()).toList(), 'UserSensorData': _UserSensorData?.map((SensorData? e) => e?.toJson()).toList(), 'device_id': _device_id, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'UserProfiles': _UserProfiles?.map((Profiles? e) => e?.toJson()).toList(), 'device_id': _device_id, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
   
   Map<String, Object?> toMap() => {
-    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'UserProfiles': _UserProfiles, 'UserSensorData': _UserSensorData, 'device_id': _device_id, 'createdAt': _createdAt, 'updatedAt': _updatedAt
+    'id': id, 'username': _username, 'password': _password, 'active_profile_id': _active_profile_id, 'UserProfiles': _UserProfiles, 'device_id': _device_id, 'createdAt': _createdAt, 'updatedAt': _updatedAt
   };
 
   static final QueryModelIdentifier<UsersModelIdentifier> MODEL_IDENTIFIER = QueryModelIdentifier<UsersModelIdentifier>();
@@ -200,9 +186,6 @@ class Users extends Model {
   static final QueryField USERPROFILES = QueryField(
     fieldName: "UserProfiles",
     fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (Profiles).toString()));
-  static final QueryField USERSENSORDATA = QueryField(
-    fieldName: "UserSensorData",
-    fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (SensorData).toString()));
   static final QueryField DEVICE_ID = QueryField(fieldName: "device_id");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "Users";
@@ -244,13 +227,6 @@ class Users extends Model {
       isRequired: false,
       ofModelName: (Profiles).toString(),
       associatedKey: Profiles.USERSID
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.hasMany(
-      key: Users.USERSENSORDATA,
-      isRequired: false,
-      ofModelName: (SensorData).toString(),
-      associatedKey: SensorData.USERSID
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(

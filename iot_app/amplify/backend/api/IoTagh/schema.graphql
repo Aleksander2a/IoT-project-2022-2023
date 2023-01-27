@@ -1,13 +1,3 @@
-type SensorData @model @auth(rules: [{allow: public}]) {
-  id: ID!
-  temperature: Float
-  humidity: Float
-  pressure: Float
-  usersID: ID! @index(name: "byUsers")
-  creation_time: AWSDateTime!
-  device_id: String!
-}
-
 type Profiles @model @auth(rules: [{allow: public}]) {
   id: ID!
   profile_name: String!
@@ -26,7 +16,6 @@ type Users @model @auth(rules: [{allow: public}]) {
   password: String!
   active_profile_id: ID
   UserProfiles: [Profiles] @hasMany(indexName: "byUsers", fields: ["id"])
-  UserSensorData: [SensorData] @hasMany(indexName: "byUsers", fields: ["id"])
   device_id: String
 }
  

@@ -34,7 +34,9 @@ const char* passwordAP = "IOTagh-2022";
 String ssidWiFi = "";
 String passwordWiFi = "";
 
-String userId = "";
+char deviceId_buffer[50];
+String deviceId = "";
+
 
 WiFiServer server(80);
 
@@ -161,6 +163,10 @@ void setup() {
     delay(10000);
   }
 
+  // assign chip ID to variable
+  sprintf(deviceId_buffer, "%lu", ESP.getEfuseMac());
+  deviceId = String(deviceId_buffer);
+
   // AWS
   net.setCACert(rootCA);
   net.setCertificate(certificate_pem_crt);
@@ -169,12 +175,11 @@ void setup() {
 
   // Display unique code
   Serial.print("Your ESP chip ID is:  ");
-  Serial.println(ESP.getEfuseMac());
+  Serial.println(deviceId);
 
   // check if ssid and password are saved in file and if can connect with them
   Serial.println("Read WiFi data from file...");
-  readUseridSsidAndPasswordFromFile();
-  Serial.println("USERID from file: " + userId);
+  readSsidAndPasswordFromFile();
   Serial.println("SSID from file: " + ssidWiFi);
   Serial.println("PASSWORD from file: " + passwordWiFi);
   if(ssidWiFi != "") {
@@ -230,15 +235,14 @@ void loop() {
   }
 
   // AWS publish message
-  String time=getLocalTime();
-  char sensorData[128];
-  sprintf(sensorData, "{\"Temperature\": %f, \"Humidity\": %f, \"Pressure\": %f, \"Time\": \"%s\"}", T, h, p, time.c_str());
+  char sensorData[256];
+  sprintf(sensorData, "{\"temperature\": %f, \"humidity\": %f, \"pressure\": %f, \"creation_time\": %lu, \"device_id\": \"%s\"}", T, h, p, getTime(), deviceId.c_str());
   if (stopPublishing == false) {
-    boolean rc = pubSubClient.publish((userId + "/" + ESP.getEfuseMac() + "/sensorData").c_str(), sensorData);
+    boolean rc = pubSubClient.publish((deviceId + "/data").c_str(), sensorData);
     Serial.print("Message published, rc=");
     Serial.print((rc ? "OK: " : "FAILED: "));
   }
-  Serial.println(userId + "/" + ESP.getEfuseMac() + "/sensorData");
+  Serial.println(deviceId + "/data");
   Serial.println(sensorData);
 
   delay(1000);
@@ -262,7 +266,7 @@ void responseToGET(WiFiClient client) {
   client.println("Content-type:text/html");
   client.println("Connection: close");
   client.println();
-  client.println(ESP.getEfuseMac());
+  client.println(deviceId);
   client.println();
 }
 
@@ -273,7 +277,7 @@ void responseToPOST(WiFiClient client) {
   client.println();
 
   WiFi.mode(WIFI_AP_STA);
-  getSsidAndPasswordAndUserID(header);
+  getSsidAndPassword(header);
   Serial.print(" Connecting to ");
   Serial.print(ssidWiFi);
 
@@ -297,16 +301,15 @@ void responseToPOST(WiFiClient client) {
     WiFi.mode(WIFI_STA);
     // save ssid and password to file
     Serial.println("Saving WiFi data to file...");
-    writeUseridSsidAndPasswordToFile();
+    writeSsidAndPasswordToFile();
   }
 }
 
-void writeUseridSsidAndPasswordToFile() {
+void writeSsidAndPasswordToFile() {
   // Open or create the file
   File file = SPIFFS.open("/config.txt", FILE_WRITE);
   
   // Write the data to the file
-  file.println("userid=" + userId);
   file.println("ssid=" + ssidWiFi);
   file.println("password=" + passwordWiFi);
   
@@ -314,7 +317,7 @@ void writeUseridSsidAndPasswordToFile() {
   file.close();
 }
 
-void readUseridSsidAndPasswordFromFile() {
+void readSsidAndPasswordFromFile() {
   // Open the file
   File file = SPIFFS.open("/config.txt", FILE_READ);
   
@@ -333,9 +336,6 @@ void readUseridSsidAndPasswordFromFile() {
     } else if (line.startsWith("password=")) {
       passwordWiFi = line.substring(9);
       passwordWiFi.trim();
-    } else if (line.startsWith("userid=")) {
-      userId = line.substring(7);
-      userId.trim();
     }
   }
   
@@ -344,30 +344,24 @@ void readUseridSsidAndPasswordFromFile() {
 }
 
 
-void getSsidAndPasswordAndUserID(String header) {
+void getSsidAndPassword(String header) {
   header += '\n';
   int last_nl = header.lastIndexOf('\n');
   int last_but1_nl = header.substring(0, last_nl).lastIndexOf('\n');
   String payload = header.substring(last_but1_nl + 1, last_nl);
   int appersantidx1 = payload.indexOf('&');
   int appersantidx2 = payload.lastIndexOf('&');
-  
-  // User ID
-  String uidPart = payload.substring(0, appersantidx1);
-  int eqidx = uidPart.indexOf('=');
-  userId = uidPart.substring(eqidx + 1);
 
   // SSID
-  String ssidPart = payload.substring(appersantidx1 + 1, appersantidx2);
-  eqidx = ssidPart.indexOf('=');
+  String ssidPart = payload.substring(0, appersantidx1);
+  int eqidx = ssidPart.indexOf('=');
   ssidWiFi = ssidPart.substring(eqidx + 1);
 
   // Password
-  String pwdPart = payload.substring(appersantidx2 + 1);
+  String pwdPart = payload.substring(appersantidx1 + 1, appersantidx2);
   eqidx = pwdPart.indexOf('=');
   passwordWiFi = pwdPart.substring(eqidx + 1);
 
-  Serial.println("\nUID: " + userId);
   Serial.println("SSID: " + ssidWiFi);
   Serial.println("PWD: " + passwordWiFi);
 }
@@ -446,34 +440,22 @@ void connectAWS() {
     }
     Serial.println(" connected");
 
-    pubSubClient.subscribe((userId + "/" + ESP.getEfuseMac() + "/commands").c_str());
+    pubSubClient.subscribe((deviceId + "/commands").c_str());
     pubSubClient.loop();
   }
 }
 // ===================================================== AWS END =====================================================
+
 // ===================================================== TIME BEGIN =====================================================
-String getLocalTime(){
+// Function that gets current epoch time
+unsigned long getTime() {
+  time_t now;
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return "Failed to obtain time";
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
   }
-  String day=String(timeinfo.tm_mday);
-  if(day.length()==1)
-    day="0"+day;
-  String month=String(timeinfo.tm_mon+1);
-  if(month.length()==1)
-    month="0"+month;
-  String hour=String(timeinfo.tm_hour);
-  if(hour.length()==1)
-    hour="0"+hour;
-  String min=String(timeinfo.tm_min);
-  if(min.length()==1)
-    min="0"+min;
-  String sec=String(timeinfo.tm_sec);  
-  if(sec.length()==1)
-    sec="0"+sec;
-  String date=String(1900 + timeinfo.tm_year) + "-" + month + "-" + day + " " +  hour+ ":" + min + ":" + sec;
-  return date;
+  time(&now);
+  return now;
 }
 // ===================================================== TIME END =====================================================

@@ -21,7 +21,7 @@ import '../models/Profiles.dart';
 import 'package:android_flutter_wifi/android_flutter_wifi.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:restart_app/restart_app.dart';
+import 'package:simply_wifi/simply_wifi.dart';
 
 class WifiConnectPage extends StatefulWidget {
   WifiConnectPage({Key? key, required this.user, required this.userProfiles, required this.activeProfile, required this.isRegistering}) : super(key: key);
@@ -48,8 +48,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
   void init() async {
     await AndroidFlutterWifi.init();
-    await AndroidFlutterWifi.disableWifi();
-    await AndroidFlutterWifi.enableWifi();
+    await SimplyWifi.init();
   }
 
 
@@ -111,7 +110,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
   Future<bool> _connectToAP() async {
     String ssid = "ESP32-Access-Point";
     String password = "IOTagh-2022";
-    var isConnectedToAP = await AndroidFlutterWifi.connectToNetwork(ssid, password);
+    var isConnectedToAP = await SimplyWifi.connectWifiByName(ssid, password: password);
     if(!isConnectedToAP)_showNotConnectedDialog(widget.isRegistering);
     return isConnectedToAP;
   }
@@ -230,7 +229,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
     http.post(
       Uri.parse('http://192.168.4.1'),
       body:{
-        'user_id': widget.user.id,
         'ssid': _ssid,
         'pwd': _password
       },
@@ -239,7 +237,7 @@ class _WifiConnectState extends State<WifiConnectPage>{
   }
 
   Future<bool> _isESPConnectedToWiFi() async {
-    await Future.delayed(Duration(seconds: 6));
+    await Future.delayed(Duration(seconds: 8));
     String ssid = "ESP32-Access-Point";
     String password = "IOTagh-2022";
     var isAPAvailable = await AndroidFlutterWifi.connectToNetwork(ssid, password);
@@ -261,12 +259,6 @@ class _WifiConnectState extends State<WifiConnectPage>{
         device_id: response.body.trim()
     );
     widget.user = updatedUser;
-    try {
-      // save the updated User to the DataStore
-      await Amplify.DataStore.save(updatedUser);
-    } catch (e) {
-      safePrint('An error occurred while saving a new User: $e');
-    }
     if(!await _isESPConnectedToWiFi())return;
     var isconnectedToWifi = await AndroidFlutterWifi.isConnected();
     while(!isconnectedToWifi){
@@ -275,6 +267,12 @@ class _WifiConnectState extends State<WifiConnectPage>{
       isconnectedToWifi=await AndroidFlutterWifi.isConnected();
     }
     EasyLoading.dismiss();
+    try {
+      // save the updated User to the DataStore
+      await Amplify.DataStore.save(updatedUser);
+    } catch (e) {
+      safePrint('An error occurred while saving a new User: $e');
+    }
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => HomePage(user: widget.user, userProfiles: widget.userProfiles, activeProfile: widget.activeProfile)));
   }

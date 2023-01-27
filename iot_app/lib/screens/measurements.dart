@@ -21,6 +21,7 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 
 
@@ -39,40 +40,62 @@ class Measures extends StatefulWidget {
 class _MeasuresState extends State<Measures>
     with AutomaticKeepAliveClientMixin {
   String dropdownValue = '';
-  double temperature = 0;
-  double humidity = 0;
-  double pressure = 0;
-  String time="";
+  num temperature = 0;
+  num humidity = 0;
+  num pressure = 0;
 
   final MqttServerClient client = MqttServerClient("a2m6jezl11qjqa-ats.iot.eu-west-1.amazonaws.com", '');
-  late StreamSubscription subscription;
   TextEditingController tempController = TextEditingController();
   TextEditingController humController = TextEditingController();
   TextEditingController presController = TextEditingController();
 
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
     mqttConnect(Uuid().v4());
     fetchSensorData();
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchSensorData());
   }
 
   Future<void> fetchSensorData() async {
-    if(tempController.text == ''){
-      List<SensorData> sensorData = await Amplify.DataStore.query(
-        SensorData.classType,
-        where: SensorData.USERSID.eq(widget.user.id),
-        sortBy: [SensorData.CREATION_TIME.descending()],
-        pagination: const QueryPagination(limit: 1),
-      );
-      if (sensorData.isNotEmpty) {
-        tempController.text = sensorData[0].temperature.toString();
-        humController.text = sensorData[0].humidity.toString();
-        presController.text = sensorData[0].pressure.toString();
-        setState(() {});
-      }
+    // Get sensor data from API
+    String uri = 'https://km2lp7sn27.execute-api.eu-west-1.amazonaws.com/betae/sensordata?device_id=${widget.user.device_id}';
+    print("URI: $uri");
+    print("Before calling API");
+    var response = await http.get(
+        Uri.parse(uri),
+        headers: {"x-api-key": "b0zk8nTWwj5E63DstZlBXa2xstTKArlv4nYjjvfS"}
+    );
+    print(response.body);
+    print("After calling API");
+    var data = jsonDecode(response.body);
+    if(data[0] == null) {
+      return;
     }
+    data = data[0];
+    if (data['device_id'] != widget.user.device_id) {
+      print("Wrong device");
+      return;
+    }
+    setState(() {
+      temperature = data['temperature'];
+      humidity = data['humidity'];
+      pressure = data['pressure'];
+
+      // Round to 1 decimal places
+      temperature = (temperature * 10).round() / 10;
+      humidity = (humidity * 10).round() / 10;
+      pressure = (pressure * 10).round() / 10;
+
+      tempController.text = temperature.toString();
+      humController.text = humidity.toString();
+      presController.text = pressure.toString();
+    });
+    print("Temperature: $temperature");
+    print("Humidity: $humidity");
+    print("Pressure: $pressure");
   }
 
   Color isTempOk() {
@@ -148,57 +171,7 @@ class _MeasuresState extends State<Measures>
     } else {
       return false;
     }
-
-    subscription = client.updates?.listen(_onMessage) as StreamSubscription;
-    print('${widget.user.id}/${widget.user.device_id}/sensorData');
-    String topic = '${widget.user.id}/${widget.user.device_id}/sensorData';
-    client.subscribe(topic, MqttQos.atMostOnce);
-
     return true;
-  }
-
-  Future<void> _onMessage(List<mqtt.MqttReceivedMessage> event) async {
-    final mqtt.MqttPublishMessage recMess =
-    event[0].payload as mqtt.MqttPublishMessage;
-    final String message =
-    mqtt.MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-    print('MQTT message: topic is <${event[0].topic}>, payload is <-- $message -->');
-    Map valueMap = json.decode(message);
-    temperature = valueMap['Temperature'].toDouble();
-    humidity = valueMap['Humidity'].toDouble();
-    pressure = valueMap['Pressure'].toDouble();
-    time = valueMap['Time'].toString();
-    DateTime date = DateFormat("yyyy-MM-dd' 'HH:mm:ss").parse(time);
-    String dateStr =DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'").format(date);
-    // Round to 1 decimal places
-    temperature = (temperature * 10).round() / 10;
-    humidity = (humidity * 10).round() / 10;
-    pressure = (pressure * 10).round() / 10;
-
-    tempController.text = temperature.toString();
-    humController.text = humidity.toString();
-    presController.text = pressure.toString();
-    setState(() {});
-    print(temperature.toString());
-    print(humidity.toString());
-    print(pressure.toString());
-
-    final sensorData = SensorData(
-        usersID: widget.user.id,
-        temperature: temperature,
-        humidity: humidity,
-        pressure: pressure,
-        creation_time: TemporalDateTime.fromString(dateStr),
-        device_id: widget.user.device_id!
-    );
-    try {
-      // save the new User to the DataStore
-      await Amplify.DataStore.save(sensorData);
-      // navigate to the home page
-      print("Saved sensor data");
-    } catch (e) {
-      safePrint('An error occurred while saving a new User: $e');
-    }
   }
 
   void onConnected() {
@@ -212,8 +185,6 @@ class _MeasuresState extends State<Measures>
   void pong() {
     print("Pong");
   }
-
-
 
   Widget _measurement(String title) {
     return Column(
@@ -277,12 +248,12 @@ class _MeasuresState extends State<Measures>
           // Publish mqtt message to stop
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Stop"}');
-          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         } else {
           // Publish mqtt message to resume
           final mqtt.MqttClientPayloadBuilder builder = mqtt.MqttClientPayloadBuilder();
           builder.addString('{"Command": "Resume"}');
-          client.publishMessage('${widget.user.id}/${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
+          client.publishMessage('${widget.user.device_id}/commands', MqttQos.atMostOnce, builder.payload!);
         }
       },
       child: Container(
