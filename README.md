@@ -1,6 +1,13 @@
 # IoT-project-2022-2023
 
+## Columns in the table to store sensor data:
+| device_id      | temperature | humidity     | pressure | creation_time |
+| :---           |    :----:   | :----:       |:----:    |          ---: |
+
 ## Sample MQTT message from ESP32 to topic `<device_id>/data`:
+- messages to topics defined by `+/data` are then passed to the below lambda function that saves data
+- this is done by AWS IoT Rule with Lambda action
+
 ```json
 {
     "device_id": "4095064076",
@@ -11,42 +18,7 @@
 }
 ```
 
-## Columns in the table to store sensor data:
-| device_id      | temperature | humidity     | pressure | creation_time |
-| :---           |    :----:   | :----:       |:----:    |          ---: |
-
-## Lambda Function to retrieve last sensor data by `device_id` param in the URL:
-- this function is exposed using API GATEWAY
-```js
-const AWS = require('aws-sdk');
-AWS.config.update({region: "eu-west-1"});
-
-exports.handler = async (event, context) => {
-    const dc = new AWS.DynamoDB.DocumentClient({region: "eu-west-1"});
-    
-    const params = {
-        TableName: "SensorDataNew",
-        KeyConditionExpression: "device_id = :device_id",
-        Limit: 1,
-        ScanIndexForward: false,
-        ExpressionAttributeValues: {
-            ":device_id": event.device_id
-        }
-    };
-    
-    try {
-        var data = await dc.query(params).promise();
-        console.log(data);
-        return data.Items
-    } catch(err) {
-        console.log(err);
-        return err
-    }
-    
-};
-```
-
-## Lambda Function to save data taken from MQTT message:
+## Lambda Function to save data from MQTT message:
 - checks if the device sending the message is acknowledged by any user
 - if it is, then data is saved to DynamoDB
 - 
@@ -107,4 +79,35 @@ exports.handler = async (event, context) => {
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
 }
+```
+
+## Lambda Function to retrieve last sensor data by `device_id` param in the URL:
+- this function is exposed using API GATEWAY
+```js
+const AWS = require('aws-sdk');
+AWS.config.update({region: "eu-west-1"});
+
+exports.handler = async (event, context) => {
+    const dc = new AWS.DynamoDB.DocumentClient({region: "eu-west-1"});
+    
+    const params = {
+        TableName: "SensorDataNew",
+        KeyConditionExpression: "device_id = :device_id",
+        Limit: 1,
+        ScanIndexForward: false,
+        ExpressionAttributeValues: {
+            ":device_id": event.device_id
+        }
+    };
+    
+    try {
+        var data = await dc.query(params).promise();
+        console.log(data);
+        return data.Items
+    } catch(err) {
+        console.log(err);
+        return err
+    }
+    
+};
 ```
