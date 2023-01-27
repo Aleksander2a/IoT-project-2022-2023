@@ -11,9 +11,9 @@
 ```json
 {
     "device_id": "4095064076",
+    "temperature": 4,
     "humidity": 4,
     "pressure": 4,
-    "temperature": 4,
     "creation_time": 1674582604
 }
 ```
