@@ -1,41 +1,108 @@
 # IoT-project-2022-2023
 
-## ESP32
-### Requirements:
-- [Arduino IDE](https://www.arduino.cc/en/software) (**WARNING** - [Nightly build](https://www.arduino.cc/en/software#:~:text=newer%2C%2064%20bits-,Nightly%20Builds,-Download%20a%20preview) may be required in case of some errors with connecting board)
-- ESP32-WROOM-DA Module
-
-Useful article on connecting ESP32 board: [LINK](https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/)
-
-## Mobile App
-### Requirements:
-- [Flutter](https://docs.flutter.dev/get-started/install)
-- [Amplify](https://docs.amplify.aws/cli/start/install/)
-
-## AWS
-### PubSub topics:
-#### esp32/pub
-The board sends sensor data to this topic. Sample JSON:
+## Sample MQTT message from ESP32 to topic `<device_id>/data`:
 ```json
 {
-  "Temperature": 20.5,
-  "Humidity": 54.472656,
-  "Pressure": 999.39679
+    "device_id": "4095064076",
+    "humidity": 4,
+    "pressure": 4,
+    "temperature": 4,
+    "creation_time": 1674582604
 }
 ```
 
-#### esp32/sub
-The board reads commands that are sent to this topic. Allowed messages:  
-To stop sending sensor data to AWS
-```json
-{
-  "Command": "Stop"
+## Columns in the table to store sensor data:
+| device_id      | temperature | humidity     | pressure | creation_time |
+| :---           |    :----:   | :----:       |:----:    |          ---: |
+
+## Lambda Function to retrieve last sensor data by `device_id` param in the URL:
+```js
+const AWS = require('aws-sdk');
+AWS.config.update({region: "eu-west-1"});
+
+exports.handler = async (event, context) => {
+    const dc = new AWS.DynamoDB.DocumentClient({region: "eu-west-1"});
+    
+    const params = {
+        TableName: "SensorDataNew",
+        KeyConditionExpression: "device_id = :device_id",
+        Limit: 1,
+        ScanIndexForward: false,
+        ExpressionAttributeValues: {
+            ":device_id": event.device_id
+        }
+    };
+    
+    try {
+        var data = await dc.query(params).promise();
+        console.log(data);
+        return data.Items
+    } catch(err) {
+        console.log(err);
+        return err
+    }
+    
+};
+```
+
+## Lambda Function to save data taken from MQTT message:
+```js
+const AWS = require('aws-sdk');
+AWS.config.update({region: "eu-west-1"});
+
+exports.handler = async (event, context) => {
+    if (event.device_id == null) return {"response": "no device_id in message"};
+    const dc = new AWS.DynamoDB.DocumentClient({region: "eu-west-1"});
+    
+    const paramsNewSensorDataObject = {
+        TableName: "SensorDataNew",
+        Item: {
+            "temperature": event.temperature,
+            "humidity": event.humidity,
+            "pressure": event.pressure,
+            "device_id": event.device_id,
+            "creation_time": event.creation_time
+        }
+    }
+    
+    const paramsUsers = {
+        TableName: "Users-4s4hbpqw45ghllspmndvdabz7u-betae",
+        FilterExpression: "device_id = :device_id",
+        ExpressionAttributeValues: {
+            ":device_id": event.device_id
+        }
+    };
+    
+    try {
+        // return users that have this device_id assigned to their profile
+        // may return multpile users, like roomates connected to the same device
+        var data = await dc.scan(paramsUsers).promise();
+        console.log(data);
+        
+        // check if any users are returned (this device is used by someone)
+        if (!isEmptyObject(data.Items)) {
+            // if the device is used, save data to DB
+            dc.put(paramsNewSensorDataObject, function(err, data) {
+                if (err) {
+                    console.log("Error", err);
+                } else {
+                    console.log("Success", data);
+                }
+            });
+            return event
+        } else {
+            return "Wrong device_id"
+        }
+    } catch(err) {
+        console.log(err);
+        return err
+    }
+    
+};
+
+function isEmptyObject(obj) {
+  return !Object.keys(obj).length;
 }
 ```
-To resume sending sensor data to AWS
-```json
-{
-  "Command": "Resume"
-}
-```
-When the board is first run, it will send data to AWS by default
+- checks if the device sending the message is acknowledged by any user
+- if it is, then data is saved to DynamoDB
