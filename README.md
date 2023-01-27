@@ -16,6 +16,7 @@
 | :---           |    :----:   | :----:       |:----:    |          ---: |
 
 ## Lambda Function to retrieve last sensor data by `device_id` param in the URL:
+- this function is exposed using API GATEWAY
 ```js
 const AWS = require('aws-sdk');
 AWS.config.update({region: "eu-west-1"});
@@ -46,6 +47,9 @@ exports.handler = async (event, context) => {
 ```
 
 ## Lambda Function to save data taken from MQTT message:
+- checks if the device sending the message is acknowledged by any user
+- if it is, then data is saved to DynamoDB
+- 
 ```js
 const AWS = require('aws-sdk');
 AWS.config.update({region: "eu-west-1"});
@@ -104,5 +108,3 @@ function isEmptyObject(obj) {
   return !Object.keys(obj).length;
 }
 ```
-- checks if the device sending the message is acknowledged by any user
-- if it is, then data is saved to DynamoDB
