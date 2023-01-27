@@ -5,7 +5,7 @@
 | :---           |    :----:   | :----:       |:----:    |          ---: |
 
 ## Sample MQTT message from ESP32 to topic `<device_id>/data`:
-- messages to topics defined by `+/data` are then passed to the below lambda function that saves data
+- messages to topics defined by `'+/data'` are then passed to the below lambda function that saves data
 - this is done by AWS IoT Rule with Lambda action
 
 ```json
